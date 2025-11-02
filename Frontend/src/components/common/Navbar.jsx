@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import logo from "../assets/logo.jpg";
+import logo from "../../assets/logo.jpg";
 import Button from "./Button";
-import { Search, Bell, LogOut, Contact, UserRound } from "lucide-react";
+import { Search, Bell, LogOut, Contact, UserRound, Calendar } from "lucide-react";
 
 export default function Navbar() {
   const [showMenu, setShowMenu] = useState(false);
@@ -34,6 +34,12 @@ export default function Navbar() {
     localStorage.removeItem("user");
     setShowMenu(false);
     navigate("/login");
+  };
+
+  const handleNotification = () => {
+    localStorage.removeItem("user");
+    setShowMenu(false);
+    navigate("/notificationpage");
   };
 
   return (
@@ -68,16 +74,26 @@ export default function Navbar() {
         className="flex items-center gap-3 sm:gap-4 relative mb-2 sm:mb-0"
         ref={menuRef}
       >
-        <button className="bg-white text-[#d64553] p-2 rounded-full hover:bg-[#ffe6e9] transition">
-          <Bell size={18} />
-        </button>
+        <Link
+          to="/events"
+          className="flex items-center gap-2 text-white hover:bg-red-800 px-4 py-2 rounded-md font-medium transition "
+        >
+          <Calendar size={18} />
+          <span>Events</span>
+        </Link>
 
-        <button
+        <Button 
+          onClick={() => navigate("/notificationpage")}
+          className="bg-white text-[#d64553] p-2 rounded-full hover:bg-[#ffe6e9] transition">
+          <Bell size={18} />
+        </Button>
+
+        <Button
           onClick={() => setShowMenu(!showMenu)}
           className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center font-semibold cursor-pointer hover:bg-gray-700 transition"
         >
           M
-        </button>
+        </Button>
 
         {showMenu && (
           <div className="absolute right-0 top-12 bg-white text-gray-800 shadow-lg rounded-xl w-40 py-2 z-50">

@@ -2,9 +2,23 @@ import { useNavigate } from "react-router-dom"
 import { Calendar, Users } from "lucide-react";
 import Button from "./Button";
 
-export default function AnnouncementCard({ id, category, color, title, desc, tags, time, date }) {
+export default function AnnouncementCard({ id, category, color, title, desc, tags, time, date, status }) {
 
   const navigate = useNavigate();
+
+  const statusColors = {
+    Upcoming: "bg-green-100 text-green-700",
+    Ongoing: "bg-yellow-100 text-yellow-700",
+    Past: "bg-gray-200 text-gray-600",
+    Cancelled: "bg-red-100 text-red-700",
+  };
+
+  const dotColors = {
+    Upcoming: "bg-green-500",
+    Ongoing: "bg-yellow-500",
+    Past: "bg-gray-400",
+    Cancelled: "bg-red-500",
+  };
 
   const handleViewDetails = () => {
     navigate(`/homepage/${id}`);
@@ -35,6 +49,18 @@ export default function AnnouncementCard({ id, category, color, title, desc, tag
         ))}
         <span className="flex items-center gap-1 bg-gray-100 px-3 py-1 rounded-md">
           <Calendar size={14} /> {date}
+        </span>
+        <span
+          className={`flex items-center gap-1 px-3 py-1 rounded-full ${
+            statusColors[status] || "bg-gray-100 text-gray-700"
+          }`}
+        >
+          <div
+            className={`w-2 h-2 rounded-full ${
+              dotColors[status] || "bg-gray-500"
+            }`}
+          />
+          {status}
         </span>
       </div>
 

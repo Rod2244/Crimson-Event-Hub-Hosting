@@ -5,6 +5,9 @@ import HomePage from "./pages/HomePage";
 import EventDetails from "./pages/EventDetails"
 import AboutPage from "./pages/AboutPage";
 import UserPage from "./pages/UserPage";
+import EditProfilePage from "./pages/EditprofilePage";
+import NotificationPage from "./pages/NotificationPage";
+import EventPage from "./pages/EventPage";
 
 export default function App() {
   return (
@@ -15,7 +18,10 @@ export default function App() {
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/homepage" element={<HomePage />} />
         <Route path="/homepage/:id" element={<EventDetails />} />
+        <Route path="/events" element={<EventPage />} />
+        <Route path="/notificationpage" element={<NotificationPage />} />
         <Route path="/profile" element={<UserPage />} />
+        <Route path="/profile/editProfile" element={<EditProfilePage />} />
         <Route path="/about" element={<AboutPage />} />
       </Routes>
     </Router>

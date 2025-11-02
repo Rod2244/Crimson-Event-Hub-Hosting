@@ -1,5 +1,5 @@
-import AuthCard from "../components/AuthCard";
-import LoginForm from "../components/LoginForm";
+import AuthCard from "../components/common/AuthCard";
+import LoginForm from "../components/common/LoginForm";
 
 export default function LoginPage() {
   return (

@@ -1,9 +1,10 @@
-import UpcomingEvent from "./UpcomingEvent";
+import UpcomingEvent from "../UpcomingEvent";
 import CalendarCard from "./CalendarCard";
 import QuickActions from "./QuickAction";
+import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
-
+  const navigate = useNavigate();
   const upcoming = [
     { date: "21", month: "Sept", title: "Career Fair 2025", time: "9:00 AM – 4:00 PM" },
     { date: "25", month: "Sept", title: "Research Symposium", time: "1:00 PM – 5:00 PM" },
@@ -18,7 +19,9 @@ export default function Dashboard() {
         <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 md:col-span-2">
           <div className="flex justify-between items-center mb-3">
             <h3 className="font-semibold">Upcoming Events</h3>
-            <button className="text-[#d64553] text-sm font-medium hover:underline">
+            <button 
+              onClick={() => navigate("/events")}
+              className="text-[#d64553] text-sm font-medium hover:underline">
               View All
             </button>
           </div>

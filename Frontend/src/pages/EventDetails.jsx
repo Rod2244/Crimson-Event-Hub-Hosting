@@ -1,12 +1,12 @@
 import { useParams } from "react-router-dom";
-import Navbar from "../components/Navbar";
+import Navbar from "../components/common/Navbar";
 import { Calendar, Clock, MapPin, Share2, Bookmark, ArrowRight } from "lucide-react";
-import AboutEventCard from "../components/AbouteventCard";
-import EventDetailsSection from "../components/EventdetailSection";
-import AttachmentFile from "../components/AttachmentFile";
-import OrganizerSection from "../components/OrganizerSection";
-import ShareEvent from "../components/ShareEvent";
-import RelatedEvents from "../components/RelatedEvents";
+import AboutEventCard from "../components/user/AbouteventCard";
+import EventDetailsSection from "../components/user/EventdetailSection";
+import AttachmentFile from "../components/organizer/AttachmentFile";
+import OrganizerSection from "../components/organizer/OrganizerSection";
+import ShareEvent from "../components/user/ShareEvent";
+import RelatedEvents from "../components/common/RelatedEvents";
 
 export default function EventDetails() {
   const { id } = useParams();
