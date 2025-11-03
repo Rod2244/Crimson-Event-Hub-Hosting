@@ -1,14 +1,18 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Calendar, Clock, MapPin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function EventsPage() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const hasFetched = useRef(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch("/data/events.json") 
+    if (hasFetched.current) return;
+    hasFetched.current = true;
+    
+    fetch("/data/data.json") 
       .then((res) => res.json())
       .then((data) => {
         const upcomingEvents = data

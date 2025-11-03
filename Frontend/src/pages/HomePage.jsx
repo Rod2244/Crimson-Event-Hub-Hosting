@@ -11,7 +11,7 @@ export default function HomePage() {
   };
   return (
     <div className="min-h-screen bg-gray-100">
-      <Navbar/>
+      <Navbar showSearchbar={false}/>
       <main className="p-6">
         <section className="bg-gray-100 py-4 px-6 border-t border-[#d64553]">
           <h2 className="text-2xl font-semibold text-gray-800 mb-3">
@@ -27,7 +27,7 @@ export default function HomePage() {
             View All Events
           </button>
         </div>
-        <Dashboard />
+        <Dashboard classname="mb-10"/>
       </main>
     </div>
   );

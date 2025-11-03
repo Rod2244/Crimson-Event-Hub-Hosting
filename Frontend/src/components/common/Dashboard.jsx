@@ -1,9 +1,9 @@
-import UpcomingEvent from "../UpcomingEvent";
+import UpcomingEvent from "./UpcomingEvent";
 import CalendarCard from "./CalendarCard";
 import QuickActions from "./QuickAction";
 import { useNavigate } from "react-router-dom";
 
-export default function Dashboard() {
+export default function Dashboard({className = ""}) {
   const navigate = useNavigate();
   const upcoming = [
     { date: "21", month: "Sept", title: "Career Fair 2025", time: "9:00 AM – 4:00 PM" },
@@ -12,7 +12,7 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen text-gray-800 space-y-6">
+    <div className={`p-6 bg-gray-100 min-h-screen text-gray-800 space-y-6 ${className}`}>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <CalendarCard />
