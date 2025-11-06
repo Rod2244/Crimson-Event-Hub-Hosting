@@ -1,22 +1,14 @@
-import Button from "./Button";
-import { Link, useNavigate } from "react-router-dom";
 import { Mail, KeyRound } from "lucide-react";
 import { useState } from "react";
+import Button from "./Button";
+import googleIcon from "../../assets/google.png"; // add Google icon
 
-
-
-export default function LoginForm() {
+export default function LoginForm({ onFlip }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const navigate = useNavigate();
-
-  const handleLogin = (e) => {
-    e.preventDefault();
-    navigate("/homepage");
-  };
 
   return (
-    <form className="space-y-4" onSubmit={handleLogin}>
+    <form className="space-y-4">
       <div className="relative">
         <Mail className="absolute left-3 top-3 text-gray-500" size={20} />
         <input
@@ -39,25 +31,27 @@ export default function LoginForm() {
         />
       </div>
 
-      <div className="text-right">
-        <Link to="#" className="text-sm text-[#C8102E] hover:underline">
-          Forgot Password?
-        </Link>
-      </div>
+      <Button
+        label="Login"
+        className="w-full bg-[#C8102E] text-white py-2 rounded-lg font-semibold hover:bg-[#a00e25] transition"
+      />
 
-      <Link to="/homepage">
-        <Button
-            label ="Login"
-            className="w-full bg-[#C8102E] text-white py-2 rounded-lg font-semibold hover:bg-[#a00e25] transition"
-        >
-        </Button>
-      </Link>
+      <div className="flex items-center justify-center gap-2 mt-2">
+        <img src={googleIcon} alt="Google" className="w-5 h-5" />
+        <span className="text-sm text-gray-600 cursor-pointer hover:underline">
+          Login with Google
+        </span>
+      </div>
 
       <p className="text-sm text-gray-600 mt-3">
         Don’t have an account?{" "}
-        <Link to="/signup" className="text-[#C8102E] font-medium hover:underline">
+        <button
+          type="button"
+          onClick={onFlip}
+          className="text-[#C8102E] font-medium hover:underline"
+        >
           Sign up
-        </Link>
+        </button>
       </p>
     </form>
   );

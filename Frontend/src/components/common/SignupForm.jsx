@@ -1,28 +1,24 @@
-import Button from "./Button";
-import { Link, useNavigate } from "react-router-dom";
-import { Mail, KeyRound, User } from "lucide-react";
+import { UserRound, Mail, KeyRound } from "lucide-react";
 import { useState } from "react";
+import Button from "./Button";
 
-export default function SignupForm() {
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const navigate = useNavigate();
+export default function SignupForm({ onFlip }) {
+  const [form, setForm] = useState({ name: "", email: "", password: "" });
 
-  const handleSignup = (e) => {
-    e.preventDefault();
-    navigate("/homepage");
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   return (
-    <form className="space-y-4" onSubmit={handleSignup}>
+    <form className="space-y-4">
       <div className="relative">
-        <User className="absolute left-3 top-3 text-gray-500" size={20} />
+        <UserRound className="absolute left-3 top-3 text-gray-500" size={20} />
         <input
           type="text"
+          name="name"
           placeholder="Full Name"
-          value={fullName}
-          onChange={(e) => setFullName(e.target.value)}
+          value={form.name}
+          onChange={handleChange}
           className="w-full pl-10 pr-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#C8102E]"
         />
       </div>
@@ -31,9 +27,10 @@ export default function SignupForm() {
         <Mail className="absolute left-3 top-3 text-gray-500" size={20} />
         <input
           type="email"
+          name="email"
           placeholder="Email Address"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          value={form.email}
+          onChange={handleChange}
           className="w-full pl-10 pr-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#C8102E]"
         />
       </div>
@@ -42,26 +39,28 @@ export default function SignupForm() {
         <KeyRound className="absolute left-3 top-3 text-gray-500" size={20} />
         <input
           type="password"
+          name="password"
           placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          value={form.password}
+          onChange={handleChange}
           className="w-full pl-10 pr-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#C8102E]"
         />
       </div>
 
-      <Link to="/login">
-        <Button
-            label ="Sign up"
-            className="w-full bg-[#C8102E] text-white py-2 rounded-lg font-semibold hover:bg-[#a00e25] transition"
-        >
-        </Button>
-      </Link>
+      <Button
+        label="Sign Up"
+        className="w-full bg-[#C8102E] text-white py-2 rounded-lg font-semibold hover:bg-[#a00e25] transition"
+      />
 
       <p className="text-sm text-gray-600 mt-3">
         Already have an account?{" "}
-        <Link to="/login" className="text-[#C8102E] font-medium hover:underline">
-          Login
-        </Link>
+        <button
+          type="button"
+          onClick={onFlip}
+          className="text-[#C8102E] font-medium hover:underline"
+        >
+          Log in
+        </button>
       </p>
     </form>
   );
