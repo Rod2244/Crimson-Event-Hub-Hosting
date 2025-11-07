@@ -1,6 +1,7 @@
 import { UserRound, Mail, KeyRound } from "lucide-react";
 import { useState } from "react";
 import Button from "./Button";
+import { FcGoogle } from "react-icons/fc";
 
 export default function SignupForm({ onFlip }) {
   const [form, setForm] = useState({ name: "", email: "", password: "" });
@@ -49,19 +50,19 @@ export default function SignupForm({ onFlip }) {
 
       <Button
         label="Sign Up"
+        
         className="w-full bg-[#C8102E] text-white py-2 rounded-lg font-semibold hover:bg-[#a00e25] transition"
       />
 
-      <p className="text-sm text-gray-600 mt-3">
-        Already have an account?{" "}
-        <button
-          type="button"
-          onClick={onFlip}
-          className="text-[#C8102E] font-medium hover:underline"
-        >
-          Log in
-        </button>
-      </p>
+      <button
+        type="button"
+        className="flex items-center justify-center gap-2 w-full mt-2 border border-gray-300 bg-white py-2 rounded-lg shadow-sm hover:bg-gray-50 transition cursor-pointer"
+      >
+        <FcGoogle className="text-xl" />
+        <span className="text-sm font-medium text-gray-700">
+          Sign up with Google
+        </span>
+      </button>
     </form>
   );
 }

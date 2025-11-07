@@ -1,7 +1,7 @@
 import { Mail, KeyRound } from "lucide-react";
 import { useState } from "react";
 import Button from "./Button";
-import googleIcon from "../../assets/google.png"; // add Google icon
+import { FcGoogle } from "react-icons/fc";
 
 export default function LoginForm({ onFlip }) {
   const [email, setEmail] = useState("");
@@ -33,26 +33,19 @@ export default function LoginForm({ onFlip }) {
 
       <Button
         label="Login"
+
         className="w-full bg-[#C8102E] text-white py-2 rounded-lg font-semibold hover:bg-[#a00e25] transition"
       />
 
-      <div className="flex items-center justify-center gap-2 mt-2">
-        <img src={googleIcon} alt="Google" className="w-5 h-5" />
-        <span className="text-sm text-gray-600 cursor-pointer hover:underline">
+      <button
+        type="button"
+        className="flex items-center justify-center gap-2 w-full mt-2 border border-gray-300 bg-white py-2 rounded-lg shadow-sm hover:bg-gray-50 transition cursor-pointer"
+      >
+        <FcGoogle className="text-xl" />
+        <span className="text-sm font-medium text-gray-700">
           Login with Google
         </span>
-      </div>
-
-      <p className="text-sm text-gray-600 mt-3">
-        Don’t have an account?{" "}
-        <button
-          type="button"
-          onClick={onFlip}
-          className="text-[#C8102E] font-medium hover:underline"
-        >
-          Sign up
-        </button>
-      </p>
+      </button>
     </form>
   );
 }
