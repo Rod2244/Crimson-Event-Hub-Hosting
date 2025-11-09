@@ -2,23 +2,35 @@ import { UserRound, Mail, KeyRound } from "lucide-react";
 import { useState } from "react";
 import Button from "./Button";
 import { FcGoogle } from "react-icons/fc";
+import axios from "axios";
 
 export default function SignupForm({ onFlip }) {
-  const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [form, setForm] = useState({ username: "", email: "", password: "" });
+  const [message, setMessage] = useState("");
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  const handleSubmit = async e => {
+    e.preventDefault();
+    try {
+      const res = await axios.post("http://localhost:5100/api/auth/signup", form);
+      setMessage(res.data.msg);
+    } catch (err) {
+      setMessage(err.response?.data?.msg || "Signup failed");
+    }
+  };
+
   return (
-    <form className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div className="relative">
         <UserRound className="absolute left-3 top-3 text-gray-500" size={20} />
         <input
           type="text"
-          name="name"
+          name="username"
           placeholder="Full Name"
-          value={form.name}
+          value={form.username}
           onChange={handleChange}
           className="w-full pl-10 pr-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#C8102E]"
         />
@@ -50,7 +62,7 @@ export default function SignupForm({ onFlip }) {
 
       <Button
         label="Sign Up"
-        
+        type="submit"
         className="w-full bg-[#C8102E] text-white py-2 rounded-lg font-semibold hover:bg-[#a00e25] transition"
       />
 
@@ -63,6 +75,7 @@ export default function SignupForm({ onFlip }) {
           Sign up with Google
         </span>
       </button>
+      {message && <p>{message}</p>}
     </form>
   );
 }

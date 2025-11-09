@@ -2,21 +2,48 @@ import { Mail, KeyRound } from "lucide-react";
 import { useState } from "react";
 import Button from "./Button";
 import { FcGoogle } from "react-icons/fc";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
-export default function LoginForm({ onFlip }) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+export default function LoginForm({ onFlip, setIsLoading }) {
+  const [form, setForm] = useState({ email: "", password: "" });
+  const [message, setMessage] = useState("");
+  const navigate = useNavigate();
+
+  const handleChange = (e) =>
+    setForm({ ...form, [e.target.name]: e.target.value });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setMessage("");
+    setIsLoading(true); // trigger full-screen spinner
+    
+    try {
+      const res = await axios.post("http://localhost:5100/api/auth/login", form);
+      localStorage.setItem("token", res.data.token);
+
+      setMessage("Login successful! Redirecting to homepage...");
+
+      setTimeout(() => {
+        navigate("/homepage");
+      }, 1000);
+    } catch (err) {
+      setMessage(err.response?.data?.msg || "Login failed");
+      setIsLoading(false); // hide spinner if login fails
+    }
+  };
 
   return (
-    <form className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
       <div className="relative">
         <Mail className="absolute left-3 top-3 text-gray-500" size={20} />
         <input
           type="email"
+          name="email"
           placeholder="Email Address"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={handleChange}
           className="w-full pl-10 pr-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#C8102E]"
+          required
         />
       </div>
 
@@ -24,16 +51,17 @@ export default function LoginForm({ onFlip }) {
         <KeyRound className="absolute left-3 top-3 text-gray-500" size={20} />
         <input
           type="password"
+          name="password"
           placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={handleChange}
           className="w-full pl-10 pr-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#C8102E]"
+          required
         />
       </div>
 
       <Button
+        type="submit"
         label="Login"
-
         className="w-full bg-[#C8102E] text-white py-2 rounded-lg font-semibold hover:bg-[#a00e25] transition"
       />
 
@@ -46,6 +74,8 @@ export default function LoginForm({ onFlip }) {
           Login with Google
         </span>
       </button>
+
+      {message && <p>{message}</p>}
     </form>
   );
 }
