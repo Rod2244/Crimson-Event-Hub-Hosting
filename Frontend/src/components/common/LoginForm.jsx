@@ -16,7 +16,7 @@ export default function LoginForm({ onFlip, setIsLoading }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage("");
-    setIsLoading(true); // trigger full-screen spinner
+    setIsLoading(true);
     
     try {
       const res = await axios.post("http://localhost:5100/api/auth/login", form);
@@ -29,7 +29,7 @@ export default function LoginForm({ onFlip, setIsLoading }) {
       }, 1000);
     } catch (err) {
       setMessage(err.response?.data?.msg || "Login failed");
-      setIsLoading(false); // hide spinner if login fails
+      setIsLoading(false); 
     }
   };
 

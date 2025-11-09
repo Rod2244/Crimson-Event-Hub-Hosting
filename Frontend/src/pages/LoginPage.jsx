@@ -3,15 +3,13 @@ import { useNavigate, useLocation } from "react-router-dom";
 import AuthCard from "../components/common/AuthCard";
 import LoginForm from "../components/common/LoginForm";
 import SignupForm from "../components/common/SignupForm";
-import LoadingSpinner from "../components/common/LoadingSpinner"; // ✅ import spinner
+import LoadingSpinner from "../components/common/LoadingSpinner"; 
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Flip animation state
   const [isFlipped, setIsFlipped] = useState(location.pathname === "/signup");
-  // ✅ Add loading spinner state
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -19,17 +17,17 @@ export default function LoginPage() {
     else setIsFlipped(false);
   }, [location.pathname]);
 
-  // Smoothly flip first, then navigate
+  
   const handleFlip = (path) => {
     setIsFlipped(path === "/signup");
     setTimeout(() => {
       navigate(path);
-    }, 500); // match your CSS transition duration
+    }, 500); 
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#C8102E] to-[#a00e25] relative overflow-hidden">
-      {/* ✅ Full-screen loading spinner */}
+      {/* Full-screen loading spinner */}
       {isLoading && <LoadingSpinner />}
 
       {/* Background overlay */}
@@ -52,7 +50,7 @@ export default function LoginPage() {
                 <p className="text-gray-600 mb-5">Login to your Account</p>
                 <LoginForm
                   onFlip={() => handleFlip("/signup")}
-                  setIsLoading={setIsLoading} // ✅ pass loading control
+                  setIsLoading={setIsLoading} 
                 />
               </AuthCard>
             </div>

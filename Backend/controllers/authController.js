@@ -1,10 +1,6 @@
-import db from "../database/database.js"; // Note the .js extension and default import
+import db from "../database/database.js"; 
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-
-// For process.env.JWT_SECRET to be available, ensure you have:
-// import 'dotenv/config'
-// in your main server file.
 
 export const signup = async (req, res) => {
   const { username, email, password } = req.body;
