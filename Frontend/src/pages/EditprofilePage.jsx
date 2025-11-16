@@ -1,40 +1,123 @@
 import Navbar from "../components/common/Navbar";
 import Button from "../components/common/Button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Camera } from "lucide-react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 export default function EditProfilePage() {
+  const navigate = useNavigate();
   const [profileImage, setProfileImage] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
 
   const [formData, setFormData] = useState({
-    firstName: "Elijah",
-    lastName: "Montefalco",
-    birthday: "2000-01-01",
-    gender: "Male",
-    email: "elijah.riley@wmsu.edu.ph",
-    studentId: "2023-00123",
-    department: "College of Computing Studies",
-    yearLevel: "3rd Year",
-    course: "BS Information Technology",
-    phone: "+63 912 345 6789",
+    firstname: "",
+    lastname: "",
+    birthday: "",
+    gender: "",
+    email: "",
+    student_id: "",
+    department: "",
+    year_level: "",
+    course: "",
+    phone: "",
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
 
+  // Fetch user profile on mount
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          navigate("/login");
+          return;
+        }
+
+        const res = await axios.get("http://localhost:5100/api/user/profile", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        setFormData({
+          ...formData,
+          firstname: res.data.firstname,
+          lastname: res.data.lastname,
+          birthday: res.data.birthday?.split("T")[0] || "",
+          gender: res.data.gender || "Male",
+          email: res.data.email,
+          student_id: res.data.student_id,
+          department: res.data.department,
+          year_level: res.data.year_level || "1st Year",
+          course: res.data.course,
+          phone: res.data.phone,
+        });
+
+        if (res.data.profile_image) {
+          setPreviewImage(`http://localhost:5100${res.data.profile_image}`);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
   const handleImageChange = (e) => {
     const file = e.target.files[0];
-    if (file) setProfileImage(URL.createObjectURL(file));
+    if (file) {
+      setProfileImage(file);
+      setPreviewImage(URL.createObjectURL(file));
+    }
   };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    alert("Profile saved successfully!");
+
+    if (formData.newPassword && formData.newPassword !== formData.confirmPassword) {
+      alert("New password and confirm password do not match!");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      const data = new FormData();
+
+      Object.keys(formData).forEach((key) => {
+        if (formData[key]) data.append(key, formData[key]);
+      });
+
+      if (profileImage) data.append("profileImage", profileImage);
+
+      const res = await axios.put("http://localhost:5100/api/user/profile", data, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      alert(res.data.message);
+
+      // ✅ Navigate based on role
+      const role_id = Number(localStorage.getItem("role_id"));
+      if (role_id === 1) {
+        navigate("/user/profile");
+      } else if (role_id === 2) {
+        navigate("/organizer/profile");
+      }
+
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.message || "Failed to update profile.");
+    }
   };
+
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
@@ -49,7 +132,7 @@ export default function EditProfilePage() {
           <div className="flex flex-col items-center mb-8">
             <div className="relative">
               <img
-                src={profileImage || "https://via.placeholder.com/150?text=Profile"}
+                src={previewImage || "https://via.placeholder.com/150?text=Profile"}
                 alt="Profile"
                 className="w-28 h-28 rounded-full object-cover border-4 border-gray-300 shadow-sm"
               />
@@ -74,18 +157,18 @@ export default function EditProfilePage() {
 
           <form onSubmit={handleSave} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <InputField label="First Name" name="firstName" value={formData.firstName} onChange={handleChange} />
-              <InputField label="Last Name" name="lastName" value={formData.lastName} onChange={handleChange} />
+              <InputField label="First Name" name="firstname" value={formData.firstname} onChange={handleChange} />
+              <InputField label="Last Name" name="lastname" value={formData.lastname} onChange={handleChange} />
 
               <InputField type="date" label="Birthday" name="birthday" value={formData.birthday} onChange={handleChange} />
 
               <SelectField label="Gender" name="gender" value={formData.gender} onChange={handleChange} options={["Male", "Female", "Other"]} />
 
               <InputField type="email" label="Email Address" name="email" value={formData.email} onChange={handleChange} />
-              <InputField label="Student ID" name="studentId" value={formData.studentId} onChange={handleChange} />
+              <InputField label="Student ID" name="student_id" value={formData.student_id} onChange={handleChange} />
               <InputField label="Department" name="department" value={formData.department} onChange={handleChange} />
 
-              <SelectField label="Year Level" name="yearLevel" value={formData.yearLevel} onChange={handleChange}
+              <SelectField label="Year Level" name="year_level" value={formData.year_level} onChange={handleChange}
                 options={["1st Year", "2nd Year", "3rd Year", "4th Year", "5th Year", "6th Year"]}
               />
 
@@ -94,40 +177,20 @@ export default function EditProfilePage() {
             </div>
 
             <div className="border-t mt-8 pt-6">
-              <h3 className="text-lg font-semibold mb-4 text-gray-800">
-                Change Password
-              </h3>
-
+              <h3 className="text-lg font-semibold mb-4 text-gray-800">Change Password</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <InputField
-                  type="password"
-                  label="Current Password"
-                  name="currentPassword"
-                  value={formData.currentPassword}
-                  onChange={handleChange}
-                />
-                <InputField
-                  type="password"
-                  label="New Password"
-                  name="newPassword"
-                  value={formData.newPassword}
-                  onChange={handleChange}
-                />
-                <InputField
-                  type="password"
-                  label="Confirm New Password"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                />
+                <InputField type="password" label="Current Password" name="currentPassword" value={formData.currentPassword} onChange={handleChange} />
+                <InputField type="password" label="New Password" name="newPassword" value={formData.newPassword} onChange={handleChange} />
+                <InputField type="password" label="Confirm New Password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} />
               </div>
             </div>
 
             <div className="flex justify-end space-x-3 mt-8">
               <Button
                 label="Cancel"
+                type="button"
                 className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2 rounded-md font-medium transition"
-                onClick={() => window.history.back()}
+                onClick={() => navigate(-1)}
               />
               <Button
                 label="Save Changes"
@@ -145,9 +208,7 @@ export default function EditProfilePage() {
 function InputField({ label, name, value, onChange, type = "text" }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        {label}
-      </label>
+      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
       <input
         type={type}
         name={name}
@@ -162,9 +223,7 @@ function InputField({ label, name, value, onChange, type = "text" }) {
 function SelectField({ label, name, value, onChange, options }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        {label}
-      </label>
+      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
       <select
         name={name}
         value={value}

@@ -37,7 +37,7 @@ export default function LoginPage() {
       ></div>
 
       {/* Auth card container */}
-      <div className="flex w-[900px] h-[550px] bg-white rounded-3xl shadow-2xl overflow-hidden relative">
+      <div className="flex w-[950px] min-h-[650px] bg-white rounded-3xl shadow-2xl overflow-hidden relative">
         <div className="w-1/2 relative perspective-1000">
           <div
             className={`absolute inset-0 transition-transform duration-700 transform-style-preserve-3d ${
@@ -47,10 +47,25 @@ export default function LoginPage() {
             {/* LOGIN SIDE */}
             <div className="absolute inset-0 backface-hidden flex items-center justify-center">
               <AuthCard title="Crimson Event Hub">
-                <p className="text-gray-600 mb-5">Login to your Account</p>
+                <p className="text-gray-600 mb-5">Sign In to your Account</p>
                 <LoginForm
                   onFlip={() => handleFlip("/signup")}
-                  setIsLoading={setIsLoading} 
+                  setIsLoading={setIsLoading}
+                  onLoginSuccess={(role_id) => {
+                    switch (role_id) {
+                      case 1: // user
+                        navigate("user");
+                        break;
+                      case 2: // Organizer
+                        navigate("/organizer");
+                        break;
+                      case 3: // admin
+                        navigate("/admin/dashboard"); // Change this to user dashboard when available
+                        break;
+                      default:
+                        navigate("/login"); // fallback
+                    }
+                  }}
                 />
               </AuthCard>
             </div>
@@ -90,7 +105,7 @@ export default function LoginPage() {
                 onClick={() => handleFlip("/login")}
                 className="bg-white text-[#C8102E] font-semibold px-6 py-2 rounded-lg hover:bg-[#FFD3D3] transition"
               >
-                Log In
+                Sign In
               </button>
             </>
           )}

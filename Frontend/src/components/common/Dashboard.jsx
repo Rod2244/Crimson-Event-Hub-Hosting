@@ -1,6 +1,5 @@
 import UpcomingEvent from "./UpcomingEvent";
 import CalendarCard from "./CalendarCard";
-import QuickActions from "./QuickAction";
 import { useNavigate } from "react-router-dom";
 
 export default function Dashboard({className = ""}) {
@@ -32,8 +31,6 @@ export default function Dashboard({className = ""}) {
           </div>
         </div>
       </div>
-
-      <QuickActions onSubmit={() => alert("Redirect to submission form")} />
     </div>
   );
 }
