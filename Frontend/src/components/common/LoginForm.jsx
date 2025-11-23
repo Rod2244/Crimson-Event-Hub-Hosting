@@ -102,8 +102,10 @@ export default function LoginForm({ onFlip, setIsLoading, onLoginSuccess }) {
 
       if (user.role_id === 3) {
         navigate("/admin/dashboard");
-      } else if (user.role_id === 1 || user.role_id === 2) {
+      } else if (user.role_id === 1) {
         navigate("/homepage");
+      } else if (user.role_id === 2) {
+        navigate("/organizer/dashboard")
       }
     } catch (err) {
       if (!err.response) {

@@ -6,7 +6,7 @@ export default function LatestUpdates() {
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState("All");
-  const [sortStatus, setSortStatus] = useState("All"); // ✅ new state for dropdown
+  const [sortStatus, setSortStatus] = useState("All");
 
   const categories = [
     "All",
@@ -19,19 +19,17 @@ export default function LatestUpdates() {
   const statuses = ["All", "Upcoming", "Ongoing", "Completed", "Cancelled"];
 
   useEffect(() => {
-    fetch("/data/data.json")
+    fetch("http://localhost:5100/api/events")   // ⬅️ UPDATE YOUR BACKEND ROUTE HERE
       .then((res) => {
-        if (!res.ok) {
-          throw new Error("Network response was not ok");
-        }
+        if (!res.ok) throw new Error("Failed to fetch events");
         return res.json();
       })
       .then((data) => {
         setAnnouncements(data);
         setLoading(false);
       })
-      .catch((error) => {
-        console.error("Error fetching announcements:", error);
+      .catch((err) => {
+        console.error("Error fetching events:", err);
         setLoading(false);
       });
   }, []);
@@ -48,7 +46,7 @@ export default function LatestUpdates() {
   }
 
   return (
-    <div className="py-4 px-6"> 
+    <div className="py-4 px-6">
       <div className="flex flex-wrap justify-between items-center gap-3 mb-5">
         <div className="flex flex-wrap gap-3">
           {categories.map((category) => {
@@ -85,16 +83,27 @@ export default function LatestUpdates() {
       </div>
 
       {loading ? (
-        <p className="text-gray-500 text-center py-8">Loading announcements...</p>
+        <p className="text-gray-500 text-center py-8">Loading events...</p>
       ) : (
         <div className="flex flex-col gap-4">
           {filteredAnnouncements.length > 0 ? (
-            filteredAnnouncements.map((item) => (
-              <AnnouncementCard key={item.id} {...item} />
+            filteredAnnouncements.map((event) => (
+              <AnnouncementCard
+                key={event.event_id}  // or item.id, depending on your data
+                id={event.event_id}    // Ensure you pass the correct event_id
+                category={event.category}
+                color={event.color || 'bg-gray-300'}  // If color is available
+                title={event.title}
+                desc={event.description || 'No description available'}  // Fallback text if no description
+                tags={event.tags || []}  // Ensure tags are passed as an array
+                time={event.event_time || 'No time available'}  // Ensure event_time is passed
+                date={event.event_date || 'No date available'}  // Ensure event_date is passed
+                status={event.status}
+              />
             ))
           ) : (
             <p className="text-gray-500 text-center py-8">
-              No announcements found for this filter.
+              No events found for this filter.
             </p>
           )}
         </div>

@@ -185,3 +185,15 @@ export const countActiveUsers = async (req, res) => {
     res.status(500).json({ msg: "Server error" });
   }
 };
+
+export const approveOrganizer = async (req, res) => {
+  const { id } = req.params;
+
+  await db.query(`
+    UPDATE user
+    SET role_id = 2, status = 'active'
+    WHERE user_id = ?
+  `, [id]);
+
+  res.json({ msg: "Organizer approved successfully!" });
+};

@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function CalendarCard() {
   const [month, setMonth] = useState(8);
   const [year, setYear] = useState(2025);
+  const navigate = useNavigate();
 
   const monthNames = [
     "January", "February", "March", "April", "May", "June",
@@ -26,7 +28,10 @@ export default function CalendarCard() {
         <h3 className="font-semibold text-gray-700">
           {monthNames[month]} {year}
         </h3>
-        <button className="text-[#d64553] text-sm font-medium hover:underline">
+        <button 
+          className="text-[#d64553] text-sm font-medium hover:underline"
+          onClick={() => navigate("/user/calendar")}
+          >
           View Calendar
         </button>
       </div>

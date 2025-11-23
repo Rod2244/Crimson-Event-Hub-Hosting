@@ -7,7 +7,6 @@ import AboutPage from "./pages/AboutPage";
 import UserPage from "./pages/UserPage";
 import EditProfilePage from "./pages/EditprofilePage";
 import NotificationPage from "./pages/NotificationPage";
-import EventPage from "./pages/EventPage";
 import SearchPage from "./pages/SearchPage";
 import OrganizerPage from "./pages/OrganizerPage";
 import ProtectedRoute from "./components/common/ProtectedRoute";
@@ -17,8 +16,20 @@ import AnnouncementManagementPage from "./pages/AnnouncementManagementPage";
 import UserManagementPage from "./pages/UserManagementPage";
 import { UserProvider } from "./context/UserContext";
 import EventSubmissionAdminPage from "./pages/EventSubmissionAdminPage";
-import AnnouncementSubmissionAdminPage from "./pages/AnnouncementSubmissionAdminPage"
-
+import AnnouncementSubmissionAdminPage from "./pages/AnnouncementSubmissionAdminPage";
+import ViewEventPage from "./pages/ViewEventPage";
+import CalendarPage from "./pages/CalendarPage";
+import OrganizerDashboard from "./pages/OrganizerDashboard";
+import OrganizerEventManagement from "./pages/OrganizerEventManagement";
+import OrganizerEventSubmission from "./pages/OrganizerEventManagementSubmission";
+import OrganizerAnnouncementManagement from "./pages/OrganizerAnnouncementManagement";
+import OrganizerAnnouncementSubmission from "./pages/OrganizerAnnouncementManagementSubmission";
+import OrganizerRegistration from "./pages/OrganizerRegistrationManagement";
+import OrganizerPensingApproval from "./pages/OrganizerPendingApproval";
+import OrganizerNotificationPage from "./pages/OrganizerNotificationPage";
+import OrganizerSettings from "./pages/OrganizerSettings";
+import AdminPendingApprovals from "./pages/AdminPendingApprovals";
+import AdminSettingPage from "./pages/AdminSettingPage";
 export default function App() {
   return (
     <UserProvider>
@@ -29,8 +40,8 @@ export default function App() {
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/homepage" element={<HomePage />} />
           <Route path="/homepage/:id" element={<EventDetails />} />
-          <Route path="/search" element={<SearchPage />} />
-          <Route path="/events" element={<EventPage />} />
+          <Route path="/events" element={<SearchPage />} />
+          
           <Route path="/notificationpage" element={<NotificationPage />} />
 
           {/* User routes */}
@@ -50,8 +61,88 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/user/calendar"
+            element={
+              <ProtectedRoute allowedRoles={[1]}>
+                <CalendarPage />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Organizer route */}
+          <Route
+            path="/organizer/dashboard"
+            element={
+              <ProtectedRoute allowedRoles={[2]}>
+                <OrganizerDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/organizer/eventmanagement"
+            element={
+              <ProtectedRoute allowedRoles={[2]}>
+                <OrganizerEventManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/organizer/eventmanagement/submission"
+            element={
+              <ProtectedRoute allowedRoles={[2]}>
+                <OrganizerEventSubmission />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/organizer/announcementmanagement"
+            element={
+              <ProtectedRoute allowedRoles={[2]}>
+                <OrganizerAnnouncementManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/organizer/announcementmanagement/submission"
+            element={
+              <ProtectedRoute allowedRoles={[2]}>
+                <OrganizerAnnouncementSubmission />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/organizer/registrationmanagement"
+            element={
+              <ProtectedRoute allowedRoles={[2]}>
+                <OrganizerRegistration />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/organizer/pending_approval"
+            element={
+              <ProtectedRoute allowedRoles={[2]}>
+                <OrganizerPensingApproval />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/organizer/notification"
+            element={
+              <ProtectedRoute allowedRoles={[2]}>
+                <OrganizerNotificationPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/organizer/settings"
+            element={
+              <ProtectedRoute allowedRoles={[2]}>
+                <OrganizerSettings />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/organizer/profile"
             element={
@@ -85,6 +176,14 @@ export default function App() {
             }
           />
           <Route
+            path="/admin/eventpage/:eventId"
+            element={
+              <ProtectedRoute allowedRoles={[3]}>
+                <ViewEventPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/admin/eventpage/eventsubmission"
             element={
               <ProtectedRoute allowedRoles={[3]}>
@@ -113,6 +212,22 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={[3]}>
                 <UserManagementPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/settings"
+            element={
+              <ProtectedRoute allowedRoles={[3]}>
+                <AdminSettingPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/pendingapprovalpage"
+            element={
+              <ProtectedRoute allowedRoles={[3]}>
+                <AdminPendingApprovals />
               </ProtectedRoute>
             }
           />

@@ -1,4 +1,3 @@
-import { X } from "lucide-react";
 
 export default function DeleteUserModal({ user, onConfirm, onCancel }) {
   return (
@@ -8,7 +7,7 @@ export default function DeleteUserModal({ user, onConfirm, onCancel }) {
           Confirm Delete
         </h2>
         <p className="text-gray-600 mb-6">
-          Are you sure you want to delete{" "}
+          Are you sure you want to delete this event:{" "}
           <span className="font-medium text-red-600">
             {user.firstname} {user.lastname}
           </span>

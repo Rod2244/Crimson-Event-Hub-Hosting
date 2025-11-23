@@ -1,27 +1,17 @@
 import { useState, useEffect } from "react";
-import { Search, Eye, Edit, Trash2 } from "lucide-react";
+import { Search, Eye, Edit, Trash2, X } from "lucide-react";
 import { fetchUsers, deleteUser, updateUser } from "../../api/userApi";
 import DeleteUserModal from "./DeleteUserModal";
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
 
-    const ROLE_MAP = {
-        1: "Student",
-        2: "Organizer",
-        3: "Admin",
-    };
-
-    const ROLE_NAME_TO_ID = {
-        Student: 1,
-        Organizer: 2,
-        Admin: 3,
-    };
+// --- Role mappings ---
+const ROLE_MAP = { 1: "Student", 2: "Organizer", 3: "Admin" };
 
 // 🟥 Role Tag component
 const RoleTag = ({ role_id }) => {
-    const role = ROLE_MAP[role_id] || "Unknown";
-
+  const role = ROLE_MAP[role_id] || "Unknown";
   let bgColor, textColor;
+
   switch (role) {
     case "Admin":
       bgColor = "bg-red-100";
@@ -39,6 +29,7 @@ const RoleTag = ({ role_id }) => {
       bgColor = "bg-gray-100";
       textColor = "text-gray-800";
   }
+
   return (
     <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${bgColor} ${textColor}`}>
       {role}
@@ -46,8 +37,7 @@ const RoleTag = ({ role_id }) => {
   );
 };
 
-// 🟩 Status Tag
-// 🟩 Status Tag with color-coded statuses
+// 🟩 Status Tag component
 const StatusTag = ({ status }) => {
   let bgColor = "bg-gray-100";
   let textColor = "text-gray-800";
@@ -77,9 +67,8 @@ const StatusTag = ({ status }) => {
   );
 };
 
-
 // 🟦 VIEW USER MODAL
-function ViewUserModal({ user, onClose }) {
+function ViewUserModal({ user, onClose, onApprove }) {
   if (!user) return null;
 
   return (
@@ -126,26 +115,14 @@ function ViewUserModal({ user, onClose }) {
             <p className="text-gray-500 text-sm mb-3">{user.email}</p>
 
             {/* Role Tag */}
-            <span
-              className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                user.role === "Admin"
-                  ? "bg-red-100 text-red-800"
-                  : user.role === "Organizer"
-                  ? "bg-blue-100 text-blue-800"
-                  : user.role === "Student"
-                  ? "bg-green-100 text-green-800"
-                  : "bg-gray-100 text-gray-800"
-              }`}
-            >
-              {user.role || "Unknown"}
-            </span>
+            <RoleTag role_id={user.role_id} />
           </div>
 
           {/* Divider */}
           <hr className="my-4 border-gray-200" />
 
           {/* User Details */}
-          <div className="grid grid-cols-2 gap-3 text-sm text-gray-700">
+          <div className="grid grid-cols-2 gap-3 text-sm text-gray-700 mb-4">
             <p><span className="font-semibold">Student ID:</span> {user.student_id || "N/A"}</p>
             <p><span className="font-semibold">Phone:</span> {user.phone || "N/A"}</p>
             <p><span className="font-semibold">Department:</span> {user.department || "N/A"}</p>
@@ -154,6 +131,15 @@ function ViewUserModal({ user, onClose }) {
             <p><span className="font-semibold">Gender:</span> {user.gender || "N/A"}</p>
           </div>
 
+          {/* Approve button only for pending organizers */}
+          {user.status === "pending" && user.role_id === null && (
+            <button
+              onClick={() => onApprove(user)}
+              className="w-full px-4 py-2 mt-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition"
+            >
+              Approve Organizer
+            </button>
+          )}
         </motion.div>
       </motion.div>
     </AnimatePresence>
@@ -196,7 +182,6 @@ function EditUserModal({ user, onClose, onSave }) {
           transition={{ duration: 0.25 }}
           className="relative bg-white rounded-2xl shadow-2xl w-[420px] max-w-[90%] p-6"
         >
-          {/* Close Button */}
           <button
             onClick={onClose}
             className="absolute top-4 right-4 text-gray-400 hover:text-red-600 transition"
@@ -204,58 +189,21 @@ function EditUserModal({ user, onClose, onSave }) {
             <X size={22} />
           </button>
 
-          <h2 className="text-2xl font-semibold text-gray-800 mb-4 text-center">
-            Edit User Details
-          </h2>
+          <h2 className="text-2xl font-semibold text-gray-800 mb-4 text-center">Edit User Details</h2>
 
           <form onSubmit={handleSubmit} className="space-y-3">
-            {/* First Name */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">First Name</label>
-              <input
-                type="text"
-                name="firstname"
-                value={formData.firstname}
-                onChange={handleChange}
-                className="w-full p-2 border rounded-lg focus:ring-red-500 focus:border-red-500"
-              />
-            </div>
-
-            {/* Last Name */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Last Name</label>
-              <input
-                type="text"
-                name="lastname"
-                value={formData.lastname}
-                onChange={handleChange}
-                className="w-full p-2 border rounded-lg focus:ring-red-500 focus:border-red-500"
-              />
-            </div>
-
-            {/* Email */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Official Email</label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className="w-full p-2 border rounded-lg focus:ring-red-500 focus:border-red-500"
-              />
-            </div>
-
-            {/* Department */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Department</label>
-              <input
-                type="text"
-                name="department"
-                value={formData.department}
-                onChange={handleChange}
-                className="w-full p-2 border rounded-lg focus:ring-red-500 focus:border-red-500"
-              />
-            </div>
+            {["firstname", "lastname", "email", "department"].map((field) => (
+              <div key={field}>
+                <label className="block text-sm font-medium text-gray-700">{field.replace(/^./, c => c.toUpperCase())}</label>
+                <input
+                  type={field === "email" ? "email" : "text"}
+                  name={field}
+                  value={formData[field]}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded-lg focus:ring-red-500 focus:border-red-500"
+                />
+              </div>
+            ))}
 
             {/* Role */}
             <div>
@@ -265,11 +213,11 @@ function EditUserModal({ user, onClose, onSave }) {
                 value={formData.role_id}
                 onChange={handleChange}
                 className="w-full p-2 border rounded-lg focus:ring-red-500 focus:border-red-500"
-                >
+              >
                 <option value={1}>Student</option>
                 <option value={2}>Organizer</option>
                 <option value={3}>Admin</option>
-               </select>
+              </select>
             </div>
 
             {/* Status */}
@@ -310,85 +258,119 @@ function EditUserModal({ user, onClose, onSave }) {
   );
 }
 
+// 🟨 User row in table
+const UserRow = ({ user, isHighlighted, onViewClick, onEditClick, onDeleteClick }) => {
+  // Format last_active nicely
+  const formattedLastActive = user.last_active
+    ? new Date(user.last_active).toLocaleString("en-PH", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "N/A";
 
-// 🟨 Single row
-const UserRow = ({ user, isHighlighted, onViewClick, onEditClick, onDeleteClick }) => (
-  <div
-    className={`grid grid-cols-8 gap-4 items-center p-3 text-sm border-b last:border-b-0 ${
-      isHighlighted ? "bg-red-50" : "hover:bg-gray-50"
-    }`}
-  >
-    <div className="col-span-2 font-semibold text-gray-800 truncate">
-      {user.firstname && user.lastname
-        ? `${user.firstname} ${user.lastname}`
-        : "Unnamed User"}
+  return (
+    <div
+      className={`grid grid-cols-9 gap-2 items-center p-3 text-sm border-b last:border-b-0 ${
+        isHighlighted ? "bg-red-50" : "hover:bg-gray-50"
+      }`}
+    >
+      <div className="col-span-2 font-semibold text-gray-800 truncate">
+        {user.firstname && user.lastname ? `${user.firstname} ${user.lastname}` : "Unnamed User"}
+      </div>
+      <div className="col-span-2 text-gray-600 text-xs truncate">
+        {user.email || "No Email Provided"}
+      </div>
+      <div className="col-span-1">
+        <RoleTag role_id={user.role_id} />
+      </div>
+      <div className="col-span-1 text-gray-600 text-xs truncate">{user.department || "N/A"}</div>
+      <div className="col-span-1 text-center">
+        <StatusTag status={user.status} />
+      </div>
+      <div className="col-span-1 text-center text-gray-600 text-xs truncate">
+        {formattedLastActive}
+      </div>
+      <div className="col-span-1 flex justify-center space-x-2">
+        <button
+          onClick={() => onViewClick(user)}
+          className="text-gray-500 hover:text-blue-600 p-1 rounded-full hover:bg-blue-50 transition"
+        >
+          <Eye size={16} />
+        </button>
+        <button
+          onClick={() => onEditClick(user)}
+          className="text-gray-500 hover:text-yellow-600 p-1 rounded-full hover:bg-yellow-50 transition"
+        >
+          <Edit size={16} />
+        </button>
+        <button
+          onClick={() => onDeleteClick(user)}
+          className="text-gray-500 hover:text-red-600 p-1 rounded-full hover:bg-red-50 transition"
+        >
+          <Trash2 size={16} />
+        </button>
+      </div>
     </div>
-    <div className="col-span-2 text-gray-600 text-xs truncate">
-      {user.email || "No Email Provided"}
-    </div>
-    <div className="col-span-1">
-      <RoleTag role_id={user.role_id} />
-    </div>
-    <div className="col-span-1 text-gray-600 text-xs truncate">
-      {user.department || "N/A"}
-    </div>
-    <div className="col-span-1 text-center">
-      <StatusTag status={user.status} />
-    </div>
-    <div className="col-span-1 flex justify-center space-x-2">
-      <button
-        onClick={() => onViewClick(user)}
-        className="text-gray-500 hover:text-blue-600 p-1 rounded-full hover:bg-blue-50 transition"
-      >
-        <Eye size={16} />
-      </button>
-      <button
-        onClick={() => onEditClick(user)}
-        className="text-gray-500 hover:text-yellow-600 p-1 rounded-full hover:bg-yellow-50 transition"
-      >
-        <Edit size={16} />
-      </button>
-      <button
-        onClick={() => onDeleteClick(user)}
-        className="text-gray-500 hover:text-red-600 p-1 rounded-full hover:bg-red-50 transition"
-      >
-        <Trash2 size={16} />
-      </button>
-    </div>
-  </div>
-);
+  );
+};
 
 
+
+// 🟫 Main content
 export default function UserManagementContent() {
-  const [roleFilter, setRoleFilter] = useState("All");
   const [users, setUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [roleFilter, setRoleFilter] = useState("All");
   const [viewUser, setViewUser] = useState(null);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [editUser, setEditUser] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
-
+  // Load users
   useEffect(() => {
     const loadUsers = async () => {
       const data = await fetchUsers();
-      console.log("Fetched users:", data);
-      if (Array.isArray(data)) {
-        setUsers(data);
-      }
+      if (Array.isArray(data)) setUsers(data);
     };
     loadUsers();
   }, []);
 
+  // Delete user
   const handleConfirmDelete = async (userId) => {
-    console.log("Deleting userId:", userId);
     const success = await deleteUser(userId);
-    if (success) {
-      setUsers((prev) => prev.filter((u) => u.user_id !== userId));
-      setSelectedUser(null);
+    if (success) setUsers((prev) => prev.filter((u) => u.user_id !== userId));
+    setSelectedUser(null);
+  };
+
+  // Approve organizer
+  const approveOrganizer = async (user) => {
+    try {
+      const res = await fetch("http://localhost:5100/api/admin/approve-organizer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: user.user_id }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        alert(data.msg);
+        setUsers((prev) =>
+          prev.map((u) =>
+            u.user_id === user.user_id ? { ...u, status: "Active", role_id: 2 } : u
+          )
+        );
+        setViewUser(null);
+      } else alert(data.msg || "Failed to approve user");
+    } catch (err) {
+      console.error("Approval error:", err);
+      alert("Error approving user");
     }
   };
 
+  // Filter users
   const filtered = users
     .filter((u) => {
       const fullName = `${u.firstname || ""} ${u.lastname || ""}`.toLowerCase();
@@ -397,20 +379,20 @@ export default function UserManagementContent() {
         (u.email && u.email.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     })
-    .filter((u) => roleFilter === "All" || u.role === roleFilter);
+    .filter((u) => roleFilter === "All" || ROLE_MAP[u.role_id] === roleFilter);
 
   return (
     <div className="flex-1 p-8 overflow-y-auto">
+      {/* Header + Filter */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-800">User Management</h1>
 
-        {/* Role Filter Dropdown */}
         <div className="relative inline-block text-left">
           <button
             onClick={() => setDropdownOpen((prev) => !prev)}
             className="inline-flex justify-center w-full rounded-lg bg-red-700 px-4 py-2 text-white font-semibold hover:bg-red-800 focus:outline-none"
           >
-            {roleFilter === "All" ? "Sort by role" : roleFilter}
+            {roleFilter}
             <svg
               className="-mr-1 ml-2 h-5 w-5"
               xmlns="http://www.w3.org/2000/svg"
@@ -427,7 +409,7 @@ export default function UserManagementContent() {
 
           {dropdownOpen && (
             <ul className="absolute right-0 mt-2 w-44 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 z-10">
-              {["All", "Admin", "Organizer", "Student", "Unknown"].map((role) => (
+              {["All", "Admin", "Organizer", "Student"].map((role) => (
                 <li
                   key={role}
                   onClick={() => {
@@ -447,57 +429,67 @@ export default function UserManagementContent() {
       {/* Search */}
       <div className="flex space-x-4 mb-8">
         <div className="flex-1 relative">
-          <Search
-            size={18}
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-          />
+          <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
           <input
             type="text"
             placeholder="Search by name or email..."
-            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500 transition"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500 transition"
           />
         </div>
       </div>
 
-      {/* Table */}
+      {/* Users Table */}
       <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-        <div className="grid grid-cols-8 gap-4 bg-red-700 text-white font-semibold text-sm p-4">
+        <div className="grid grid-cols-9 gap-4 bg-red-700 text-white font-semibold text-sm p-4">
           <div className="col-span-2">Name</div>
           <div className="col-span-2">Email</div>
           <div className="col-span-1">Role</div>
           <div className="col-span-1">Department</div>
           <div className="col-span-1 text-center">Status</div>
+          <div className="col-span-1 text-center">Last Active</div>
           <div className="col-span-1 text-center">Action</div>
         </div>
 
         <div className="divide-y divide-gray-100">
-          {filtered.length > 0 ? (
+          {filtered.length ? (
             filtered.map((u, i) => (
               <UserRow
                 key={u.user_id || i}
                 user={u}
                 isHighlighted={i % 2 === 0}
                 onViewClick={setViewUser}
-                onDeleteClick={setSelectedUser}
                 onEditClick={setEditUser}
+                onDeleteClick={setSelectedUser}
               />
             ))
           ) : (
-            <div className="text-center text-gray-500 py-6">
-              No users found.
-            </div>
+            <div className="text-center text-gray-500 py-6">No users found.</div>
           )}
         </div>
       </div>
 
-      {/* View Modal */}
-      {viewUser && (
-        <ViewUserModal user={viewUser} onClose={() => setViewUser(null)} />
+      {/* Modals */}
+      {viewUser && <ViewUserModal user={viewUser} onClose={() => setViewUser(null)} onApprove={approveOrganizer} />}
+      {editUser && (
+        <EditUserModal
+          user={editUser}
+          onClose={() => setEditUser(null)}
+          onSave={async (updatedUser) => {
+            try {
+              await updateUser(updatedUser.user_id, updatedUser);
+              setUsers((prev) =>
+                prev.map((u) => (u.user_id === updatedUser.user_id ? { ...u, ...updatedUser } : u))
+              );
+              setEditUser(null);
+            } catch (err) {
+              console.error(err);
+              alert("Error updating user");
+            }
+          }}
+        />
       )}
-
-      {/* Delete Modal */}
       {selectedUser && (
         <DeleteUserModal
           user={selectedUser}
@@ -505,30 +497,6 @@ export default function UserManagementContent() {
           onCancel={() => setSelectedUser(null)}
         />
       )}
-
-      {/* Edit Modal */}
-        {editUser && (
-            <EditUserModal
-                user={editUser}
-                onClose={() => setEditUser(null)}
-                onSave={async (updatedUser) => {
-                    try {
-                        await updateUser(updatedUser.user_id, updatedUser);
-
-                        setUsers((prev) =>
-                        prev.map((u) =>
-                            u.user_id === updatedUser.user_id ? { ...u, ...updatedUser } : u
-                        )
-                        );
-
-                        setEditUser(null);
-                    } catch (error) {
-                        console.error("Failed to update user:", error);
-                        alert("Error updating user. Please try again.");
-                    }
-                }}
-            />
-        )}
     </div>
   );
 }

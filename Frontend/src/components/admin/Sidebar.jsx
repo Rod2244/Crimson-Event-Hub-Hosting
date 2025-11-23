@@ -19,7 +19,7 @@ const Sidebar = () => {
         { name: 'Announcements', icon: Megaphone, active: false, path: '/admin/announcementpage' },
         { name: 'Users', icon: Users, active: false, path: '/admin/userpage' },
         { name: 'Pending Approvals', icon: FileClock, active: false, path: '/admin/pendingapprovalpage' },
-        { name: 'Settings', icon: Settings, active: false },
+        { name: 'Settings', icon: Settings, active: false, path: '/admin/settings' },
     ];
 
     const handleLogout = () => {

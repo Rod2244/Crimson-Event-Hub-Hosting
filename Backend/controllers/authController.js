@@ -1,63 +1,96 @@
 import db from "../database/database.js"; 
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { sendEmail } from "../utils/mailer.js"; // adjust path if needed
 
-// ✅ Signup
 export const signup = async (req, res) => {
-  const {
-    student_id,
-    firstname,
-    lastname,
-    email,
-    course,
-    department,
-    year_level,
-    phone,
-    password,
-  } = req.body;
-
-  if (!student_id || !firstname || !lastname || !email || !password)
-    return res.status(400).json({ msg: "Please fill in all required fields." });
-
   try {
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const sql = `
-      INSERT INTO user (
-        student_id, firstname, lastname, email, course,
-        department, year_level, phone, password, role_id, status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-
-    const [result] = await db.query(sql, [
-      student_id,
+    const {
       firstname,
       lastname,
       email,
-      course,
-      department,
-      year_level,
       phone,
-      hashedPassword,
-      1, // default role_id = Student
-      "active", // default status
-    ]);
+      department,
+      password,
+      role_id
+    } = req.body;
 
-    const userId = result.insertId;
-    const token = jwt.sign({ id: userId }, process.env.JWT_SECRET, {
-      expiresIn: "3h",
-    });
+    // ✅ Required fields check
+    if (!firstname || !lastname || !email || !password)
+      return res.status(400).json({ msg: "All fields required" });
 
-    res.json({
-      msg: "User registered successfully!",
-      token,
-      user: { id: userId, firstname, lastname, email },
-    });
+    // ✅ Check if email exists
+    const [existing] = await db.query(
+      "SELECT * FROM user WHERE email = ?",
+      [email]
+    );
+    if (existing.length > 0)
+      return res.status(400).json({ msg: "Email already in use" });
+
+    // ✅ Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // ✅ Determine role and status logic
+    const actualRole = role_id === "2" ? null : role_id;
+    const status = role_id === "2" ? "Pending" : "Active";
+    const applyingFor = role_id === "2" ? "Organizer" : null;
+
+    // ✅ Insert user into DB
+    await db.query(
+      `INSERT INTO user 
+      (firstname, lastname, email, phone, department, password, role_id, status, applying_for)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        firstname,
+        lastname,
+        email,
+        phone,
+        department,
+        hashedPassword,
+        actualRole,
+        status,
+        applyingFor
+      ]
+    );
+
+    // ✅ Send email notification
+    try {
+      if (role_id === "2") {
+        // Organizer application
+        await sendEmail(
+          email,
+          "Organizer Application Received",
+          `<h1>Hello ${firstname}!</h1>
+           <p>Your application to become an Organizer has been received.</p>
+           <p>Waiting for admin approval.</p>`
+        );
+      } else {
+        // Regular signup
+        await sendEmail(
+          email,
+          "Welcome to Our System",
+          `<h1>Welcome ${firstname}!</h1>
+           <p>Your account has been successfully created and is now active.</p>`
+        );
+      }
+    } catch (err) {
+      console.error("Failed to send signup email:", err);
+      // Note: We do not fail signup if email fails
+    }
+
+    // ✅ Return response
+    const message =
+      role_id === "2"
+        ? "Organizer application received. Waiting for admin approval."
+        : "Signup successful.";
+
+    return res.json({ msg: message });
   } catch (err) {
     console.error("Signup error:", err);
-    res.status(500).json({ msg: "Server error" });
+    return res.status(500).json({ msg: "Server error" });
   }
 };
+
 
 // Login
 export const login = async (req, res) => {
@@ -82,45 +115,15 @@ export const login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ msg: "Invalid credentials" });
 
-    // ⏳ Check inactivity
-    const THRESHOLD_MINUTES = 10;
-
-    const [checkInactive] = await db.query(
-      `SELECT TIMESTAMPDIFF(MINUTE, last_active, NOW()) AS inactive_minutes 
-       FROM user WHERE user_id = ?`,
-      [user.user_id]
-    );
-
-    const inactiveMinutes = checkInactive[0].inactive_minutes;
-
-    // ✔ If inactive: mark inactive in DB (optional)
-    if (inactiveMinutes >= THRESHOLD_MINUTES && user.status !== "inactive") {
-      await db.query(`
-        UPDATE user 
-        SET status = 'inactive' 
-        WHERE user_id = ?
-      `, [user.user_id]);
-    }
-
-    // ⭐ If user is inactive but logs in → reactivate automatically
-    if (user.status === "inactive") {
-      await db.query(`
-        UPDATE user 
-        SET status = 'active', last_active = NOW() 
-        WHERE user_id = ?
-      `, [user.user_id]);
-      user.status = "active";
-    }
-
-    // 🟢 Always update last_active for successful login
+    // ⏳ Optional inactivity check/update
     await db.query(
       "UPDATE user SET last_active = NOW() WHERE user_id = ?",
       [user.user_id]
     );
 
-    // 🟢 Issue Token
+    // ⭐ Issue token with role_id included
     const token = jwt.sign(
-      { id: user.user_id },
+      { id: user.user_id, role_id: user.role_id },
       process.env.JWT_SECRET,
       { expiresIn: "3h" }
     );
@@ -141,4 +144,5 @@ export const login = async (req, res) => {
     res.status(500).json({ msg: "Server error" });
   }
 };
+
 

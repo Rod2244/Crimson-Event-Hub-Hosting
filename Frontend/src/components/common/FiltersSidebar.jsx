@@ -78,7 +78,7 @@ const FiltersSidebar = ({ onClearAll, onFilterChange }) => {
       </Section>
 
       <Section title="Date Range">
-        {["All Dates", "Today", "This Week", "This Month", "Custom Range"].map(
+        {["All Dates", "Today", "This Week", "This Month"].map(
           (date) => (
             <Radio
               key={date}

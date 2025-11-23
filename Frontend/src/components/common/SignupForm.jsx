@@ -1,20 +1,17 @@
-import { UserRound, Mail, KeyRound, Phone, IdCard, BookOpen, GraduationCap, Building } from "lucide-react";
+import { UserRound, Mail, KeyRound, Phone, Building } from "lucide-react";
 import { useState } from "react";
 import Button from "./Button";
-import { FcGoogle } from "react-icons/fc";  
 import axios from "axios";
 
 export default function SignupForm({ onFlip }) {
   const [form, setForm] = useState({
-    student_id: "",
     firstname: "",
     lastname: "",
     email: "",
-    course: "",
     department: "",
-    year_level: "",
     phone: "",
     password: "",
+    role_id: "1", // default Student
   });
 
   const [message, setMessage] = useState("");
@@ -35,20 +32,41 @@ export default function SignupForm({ onFlip }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      {/* 2-column grid layout */}
-      <div className="grid grid-cols-2 gap-4">
-        {/* Student ID */}
-        <div className="relative">
-          <IdCard className="absolute left-3 top-3 text-gray-500" size={20} />
+
+      {/* Account Type Radio */}
+      <div className="flex items-center gap-6 mb-3">
+        <label className="flex items-center gap-2 cursor-pointer">
           <input
-            type="text"
-            name="student_id"
-            placeholder="Student ID"
-            value={form.student_id}
+            type="radio"
+            name="role_id"
+            value="1"
+            checked={form.role_id === "1"}
             onChange={handleChange}
-            className="w-full pl-10 pr-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#C8102E]"
           />
-        </div>
+          Student
+        </label>
+
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="radio"
+            name="role_id"
+            value="2"
+            checked={form.role_id === "2"}
+            onChange={handleChange}
+          />
+          Organizer
+        </label>
+      </div>
+
+      {/* Organizer approval note */}
+      {form.role_id === "2" && (
+        <p className="text-sm text-yellow-700 bg-yellow-100 border border-yellow-300 p-2 rounded">
+          Organizer accounts require admin approval — you’ll get an email when approved.
+        </p>
+      )}
+
+      {/* Form inputs */}
+      <div className="grid grid-cols-2 gap-4">
 
         {/* First Name */}
         <div className="relative">
@@ -59,7 +77,8 @@ export default function SignupForm({ onFlip }) {
             placeholder="First Name"
             value={form.firstname}
             onChange={handleChange}
-            className="w-full pl-10 pr-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#C8102E]"
+            className="w-full pl-10 pr-3 py-2 rounded-lg border border-gray-300
+                       focus:outline-none focus:ring-2 focus:ring-[#C8102E]"
           />
         </div>
 
@@ -72,12 +91,13 @@ export default function SignupForm({ onFlip }) {
             placeholder="Last Name"
             value={form.lastname}
             onChange={handleChange}
-            className="w-full pl-10 pr-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#C8102E]"
+            className="w-full pl-10 pr-3 py-2 rounded-lg border border-gray-300
+                       focus:outline-none focus:ring-2 focus:ring-[#C8102E]"
           />
         </div>
 
         {/* Email */}
-        <div className="relative">
+        <div className="relative col-span-2">
           <Mail className="absolute left-3 top-3 text-gray-500" size={20} />
           <input
             type="email"
@@ -85,62 +105,27 @@ export default function SignupForm({ onFlip }) {
             placeholder="Email Address"
             value={form.email}
             onChange={handleChange}
-            className="w-full pl-10 pr-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#C8102E]"
+            className="w-full pl-10 pr-3 py-2 rounded-lg border border-gray-300
+                       focus:outline-none focus:ring-2 focus:ring-[#C8102E]"
           />
         </div>
 
-        {/* Course */}
-        <div className="relative">
-          <BookOpen className="absolute left-3 top-3 text-gray-500" size={20} />
-          <input
-            type="text"
-            name="course"
-            placeholder="Course"
-            value={form.course}
-            onChange={handleChange}
-            className="w-full pl-10 pr-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#C8102E]"
-          />
-        </div>
-
-        {/* Department */}
-        <div className="relative">
+        {/* Department / Organization */}
+        <div className="relative col-span-2">
           <Building className="absolute left-3 top-3 text-gray-500" size={20} />
           <input
             type="text"
             name="department"
-            placeholder="Department"
+            placeholder={form.role_id === "1" ? "Department" : "Organization Name"}
             value={form.department}
             onChange={handleChange}
-            className="w-full pl-10 pr-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#C8102E]"
+            className="w-full pl-10 pr-3 py-2 rounded-lg border border-gray-300
+                       focus:outline-none focus:ring-2 focus:ring-[#C8102E]"
           />
-        </div>
-
-        {/* Year Level */}
-        <div className="relative">
-          <GraduationCap className="absolute left-3 top-3 text-gray-500" size={20} />
-
-          <input
-            list="yearLevels"
-            type="text"
-            name="year_level"
-            placeholder="Year Level"
-            value={form.year_level}
-            onChange={handleChange}
-            className="w-full pl-10 pr-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#C8102E]"
-          />
-
-          <datalist id="yearLevels">
-            <option value="1st Year" />
-            <option value="2nd Year" />
-            <option value="3rd Year" />
-            <option value="4th Year" />
-            <option value="5th Year" />
-            <option value="6th Year" />
-          </datalist>
         </div>
 
         {/* Phone */}
-        <div className="relative">
+        <div className="relative col-span-2">
           <Phone className="absolute left-3 top-3 text-gray-500" size={20} />
           <input
             type="text"
@@ -148,12 +133,13 @@ export default function SignupForm({ onFlip }) {
             placeholder="Phone Number"
             value={form.phone}
             onChange={handleChange}
-            className="w-full pl-10 pr-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#C8102E]"
+            className="w-full pl-10 pr-3 py-2 rounded-lg border border-gray-300
+                       focus:outline-none focus:ring-2 focus:ring-[#C8102E]"
           />
         </div>
 
-        {/* Password (Full Width) */}
-        <div className="col-span-2 relative">
+        {/* Password */}
+        <div className="relative col-span-2">
           <KeyRound className="absolute left-3 top-3 text-gray-500" size={20} />
           <input
             type="password"
@@ -161,12 +147,13 @@ export default function SignupForm({ onFlip }) {
             placeholder="Password"
             value={form.password}
             onChange={handleChange}
-            className="w-full pl-10 pr-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#C8102E]"
+            className="w-full pl-10 pr-3 py-2 rounded-lg border border-gray-300
+                       focus:outline-none focus:ring-2 focus:ring-[#C8102E]"
           />
         </div>
       </div>
 
-      {/* Submit Button */}
+      {/* Submit */}
       <Button
         label="Sign Up"
         type="submit"
