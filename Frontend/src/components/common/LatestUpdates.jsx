@@ -11,21 +11,36 @@ export default function LatestUpdates() {
   const categories = [
     "All",
     "Academic",
-    "Organizations",
     "Non-Academic",
-    "Council Events",
   ];
 
   const statuses = ["All", "Upcoming", "Ongoing", "Completed", "Cancelled"];
 
   useEffect(() => {
-    fetch("http://localhost:5100/api/events")   // ⬅️ UPDATE YOUR BACKEND ROUTE HERE
+    const token = localStorage.getItem("token");
+
+    fetch("http://localhost:5100/api/events", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch events");
         return res.json();
       })
       .then((data) => {
-        setAnnouncements(data);
+        // Filter only approved events
+        const approvedEvents = data.filter(
+          (event) => event.approval_status.toLowerCase() === "approved"
+        );
+
+        // Sort newest first (by created_at)
+        approvedEvents.sort(
+          (a, b) => new Date(b.created_at) - new Date(a.created_at)
+        );
+
+        // Take only 3 most recent
+        setAnnouncements(approvedEvents.slice(0, 3));
         setLoading(false);
       })
       .catch((err) => {
@@ -47,6 +62,7 @@ export default function LatestUpdates() {
 
   return (
     <div className="py-4 px-6">
+      {/* Category & Status Filters */}
       <div className="flex flex-wrap justify-between items-center gap-3 mb-5">
         <div className="flex flex-wrap gap-3">
           {categories.map((category) => {
@@ -82,6 +98,7 @@ export default function LatestUpdates() {
         </div>
       </div>
 
+      {/* Event Cards */}
       {loading ? (
         <p className="text-gray-500 text-center py-8">Loading events...</p>
       ) : (
@@ -89,15 +106,15 @@ export default function LatestUpdates() {
           {filteredAnnouncements.length > 0 ? (
             filteredAnnouncements.map((event) => (
               <AnnouncementCard
-                key={event.event_id}  // or item.id, depending on your data
-                id={event.event_id}    // Ensure you pass the correct event_id
+                key={event.event_id}
+                id={event.event_id}
                 category={event.category}
-                color={event.color || 'bg-gray-300'}  // If color is available
+                color={event.color || "bg-gray-300"}
                 title={event.title}
-                desc={event.description || 'No description available'}  // Fallback text if no description
-                tags={event.tags || []}  // Ensure tags are passed as an array
-                time={event.event_time || 'No time available'}  // Ensure event_time is passed
-                date={event.event_date || 'No date available'}  // Ensure event_date is passed
+                desc={event.description || "No description available"}
+                tags={event.tags || []}
+                created_at={event.created_at || "No time available"}
+                date={event.event_date || "No date available"}
                 status={event.status}
               />
             ))

@@ -5,7 +5,6 @@ import Button from "./Button";
 import axios from "axios";
 import {
   Search,
-  Bell,
   LogOut,
   Contact,
   UserRound,
@@ -93,6 +92,7 @@ export default function Navbar({ showSearchBar = false, setSearchQuery = null })
     localStorage.removeItem("userId");
     navigate("/login");
   };
+  const handleCalendar = () => navigate("/user/calendar");
   const handleNotification = () => navigate("/notificationpage");
 
   return (
@@ -146,10 +146,10 @@ export default function Navbar({ showSearchBar = false, setSearchQuery = null })
           )}
 
           <Button
-            onClick={handleNotification}
+            onClick={handleCalendar}
             className="bg-white text-[#d64553] p-2 rounded-full hover:bg-[#ffe6e9] transition cursor-pointer"
           >
-            <Bell size={18} />
+            <Calendar size={18} />
           </Button>
 
           {/* 🔹 Profile Button */}

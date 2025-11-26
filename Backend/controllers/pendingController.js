@@ -120,7 +120,7 @@ export const getUserPendingItems = async (req, res) => {
              'Event' AS type, location, event_date, event_time, audience, number_of_registration,
              event_link, description, event_image, approval_status AS status
       FROM event
-      WHERE approval_status = 'pending' AND user_id = ?
+      WHERE approval_status = 'pending' AND user_id = ? AND status != 'archived'
       ORDER BY created_at DESC
     `;
 
@@ -129,7 +129,7 @@ export const getUserPendingItems = async (req, res) => {
       SELECT announcement_id AS id, title, category, author AS organizer, created_at AS createdAt,
              'Announcement' AS type, description, file_name, file_path, approval_status AS status
       FROM announcement
-      WHERE approval_status = 'pending' AND user_id = ?
+      WHERE approval_status = 'pending' AND user_id = ? AND status != 'archived'
       ORDER BY created_at DESC
     `;
 

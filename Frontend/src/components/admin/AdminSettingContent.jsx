@@ -1,200 +1,185 @@
 import React, { useState, useEffect } from "react";
-
-// Mock archived data
-const archivedData = [
-  { id: 1, title: "Science Fair", type: "Event", date: "2025-10-15" },
-  { id: 2, title: "Campus Clean-Up", type: "Announcement", date: "2025-09-30" },
-  { id: 3, title: "Art Exhibition", type: "Event", date: "2025-08-20" },
-  { id: 4, title: "Art Exhibition", type: "Event", date: "2025-08-20" },
-  { id: 5, title: "Art Exhibition", type: "Event", date: "2025-08-20" },
-  { id: 6, title: "Art Exhibition", type: "Event", date: "2025-08-20" },
-];
+import { Trash2 } from "lucide-react";
 
 const SettingContent = () => {
-  const [twoFA, setTwoFA] = useState(false);
-  const [autoLogout, setAutoLogout] = useState(false);
-  const [passwordLength, setPasswordLength] = useState(8);
   const [archivedFilter, setArchivedFilter] = useState("all");
-  const [rejectedFilter, setRejectedFilter] = useState("all");
-  const [rejectedData, setRejectedData] = useState([]);
-  const [loadingRejected, setLoadingRejected] = useState(true);
-  const [rejectedError, setRejectedError] = useState("");
+  const [archivedData, setArchivedData] = useState([]);
+  const [loadingArchived, setLoadingArchived] = useState(true);
+  const [archivedError, setArchivedError] = useState("");
 
-  // Fetch rejected items from backend
-  useEffect(() => {
-    const fetchRejected = async () => {
-      try {
-        setLoadingRejected(true);
-        setRejectedError("");
+  // Modal state
+  const [showModal, setShowModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
 
-        // Get the token from localStorage (or wherever you store it)
-        const token = localStorage.getItem("token");
-        if (!token) {
-          setRejectedError("You must be logged in to view rejected items");
-          setRejectedData([]);
-          return;
-        }
+  const fetchArchived = async () => {
+    try {
+      setLoadingArchived(true);
+      setArchivedError("");
 
-        const res = await fetch("http://localhost:5100/api/rejected", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`, // attach JWT token
-          },
-        });
-
-        console.log("Rejected data:", rejectedData);
-
-        if (!res.ok) {
-          // 401, 403, 500, etc.
-          throw new Error(`Server error: ${res.status}`);
-        }
-
-        const data = await res.json();
-
-        // Adapt based on your backend response structure
-        if (data.success && Array.isArray(data.items)) {
-          setRejectedData(data.items);
-        } else if (Array.isArray(data)) {
-          // fallback if backend returns just an array
-          setRejectedData(data);
-        } else {
-          setRejectedError(data.message || "Failed to fetch rejected items");
-          setRejectedData([]);
-        }
-      } catch (err) {
-        console.error("Error fetching rejected items:", err);
-        setRejectedError(err.message || "Server error while fetching rejected items");
-        setRejectedData([]);
-      } finally {
-        setLoadingRejected(false);
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setArchivedError("You must be logged in.");
+        return;
       }
-    };
 
-    fetchRejected();
+      const res = await fetch("http://localhost:5100/api/archived", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) throw new Error("Server error: " + res.status);
+
+      const data = await res.json();
+      if (data.success && Array.isArray(data.items)) {
+        setArchivedData(data.items);
+      } else {
+        setArchivedData([]);
+      }
+    } catch (err) {
+      setArchivedError(err.message);
+      setArchivedData([]);
+    } finally {
+      setLoadingArchived(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchArchived();
   }, []);
 
-
-  // Filters
   const filteredArchived = archivedData.filter(item =>
     archivedFilter === "all" ? true : item.type === archivedFilter
   );
 
-  const filteredRejected = rejectedData.filter(item =>
-    rejectedFilter === "all" ? true : item.type === rejectedFilter
-  );
+  // ---------------- Delete Function ----------------
+  const handleDelete = async (id, type) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch("http://localhost:5100/api/archived/delete", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ id, type }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        fetchArchived();
+      } else {
+        alert(data.message || "Failed to delete item");
+      }
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setShowModal(false);
+      setSelectedItem(null);
+    }
+  };
 
   return (
-    <div className="flex h-[calc(100vh-2rem)] gap-6 p-4">
-      {/* Sidebar */}
-      <div className="w-full md:w-1/3 space-y-6 sticky top-4 h-[calc(100vh-2rem)] overflow-y-auto">
-        {/* Security & Privacy */}
-        <section className="bg-white rounded-xl shadow-md p-6">
-          <h2 className="text-2xl font-semibold mb-6 text-gray-800">Security & Privacy</h2>
-          <div className="space-y-4">
-            <label className="flex items-center justify-between">
-              <span className="text-gray-700 font-medium">Two-Factor Authentication (2FA) for Admins</span>
-              <input 
-                type="checkbox" 
-                checked={twoFA} 
-                onChange={() => setTwoFA(!twoFA)} 
-                className="w-5 h-5 accent-red-600"
-              />
-            </label>
+    <div className="flex-1 overflow-y-auto h-[calc(100vh-2rem)] p-6 space-y-8">
+      <h1 className="text-3xl font-bold text-gray-800">Pending Approvals</h1>
 
-            <div className="flex items-center space-x-2">
-              <label className="text-gray-700 font-medium">Minimum Password Length:</label>
-              <input 
-                type="number" 
-                value={passwordLength} 
-                onChange={e => setPasswordLength(Number(e.target.value))} 
-                className="w-20 border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-red-600 focus:border-red-600"
-              />
-            </div>
+      {/* ---------------- ARCHIVED SECTION ---------------- */}
+      <section className="bg-white rounded-xl shadow-md p-6">
+        <h2 className="text-2xl font-semibold mb-4 text-gray-800">Archived</h2>
 
-            <label className="flex items-center justify-between">
-              <span className="text-gray-700 font-medium">Auto-logout Inactive Users</span>
-              <input 
-                type="checkbox" 
-                checked={autoLogout} 
-                onChange={() => setAutoLogout(!autoLogout)} 
-                className="w-5 h-5 accent-red-600"
-              />
-            </label>
+        {/* Filter */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 mb-6 space-y-2 sm:space-y-0">
+          <label className="text-gray-700 font-medium">Filter by type:</label>
+          <select
+            className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            value={archivedFilter}
+            onChange={e => setArchivedFilter(e.target.value)}
+          >
+            <option value="all">All</option>
+            <option value="Event">Events</option>
+            <option value="Announcement">Announcements</option>
+          </select>
+        </div>
 
-            <div className="flex items-center space-x-2">
-              <label className="text-gray-700 font-medium">Data Retention Policy:</label>
-              <select className="border border-gray-300 rounded px-3 py-1 focus:ring-1 focus:ring-red-600 focus:border-red-600">
-                <option value="30">30 days</option>
-                <option value="90">90 days</option>
-                <option value="365">1 year</option>
-                <option value="forever">Forever</option>
-              </select>
-            </div>
-          </div>
-        </section>
+        {/* Loading / Error */}
+        {loadingArchived && <p className="text-gray-500">Loading archived items...</p>}
+        {archivedError && <p className="text-red-500">{archivedError}</p>}
 
-        {/* Integration & API Settings */}
-        <section className="bg-white rounded-xl shadow-md p-6">
-          <h2 className="text-2xl font-semibold mb-6 text-gray-800">Integration & API Settings</h2>
-          <div className="space-y-4">
-            <label className="flex items-center justify-between">
-              <span className="text-gray-700 font-medium">Google Calendar Sync</span>
-              <input type="checkbox" className="w-5 h-5 accent-red-600" />
-            </label>
-            <label className="flex items-center justify-between">
-              <span className="text-gray-700 font-medium">Email Notifications</span>
-              <input type="checkbox" className="w-5 h-5 accent-red-600" />
-            </label>
-          </div>
-        </section>
-      </div>
-
-      {/* Scrollable Main Content */}
-      <div className="flex-1 space-y-8 overflow-y-auto h-[calc(100vh-2rem)]">
-        {/* Archived */}
-        <section className="bg-white rounded-xl shadow-md p-6">
-          <h2 className="text-2xl font-semibold mb-4 text-gray-800">Archived</h2>
-
-          <div className="flex items-center mb-4 space-x-3">
-            <label className="text-gray-700 font-medium">Filter by type:</label>
-            <select
-              className="border border-gray-300 rounded px-3 py-1 focus:ring-1 focus:ring-red-600 focus:border-red-600"
-              value={archivedFilter}
-              onChange={e => setArchivedFilter(e.target.value)}
-            >
-              <option value="all">All</option>
-              <option value="Event">Events</option>
-              <option value="Announcement">Announcements</option>
-            </select>
-          </div>
-
-          <div className="grid grid-cols-12 gap-4 font-medium text-gray-700 bg-gray-100 p-3 rounded-t-lg">
-            <div className="col-span-6">Title</div>
-            <div className="col-span-2">Type</div>
-            <div className="col-span-2">Date</div>
-          </div>
-
-          <div className="divide-y divide-gray-200">
-            {filteredArchived.map((item, index) => (
-              <div
-                key={`${item.id}-${index}`}
-                className="grid grid-cols-12 gap-4 items-center p-3 hover:bg-gray-50 transition rounded-b-lg"
-              >
-                <div className="col-span-6 font-medium text-gray-800 truncate">{item.title}</div>
-                <div className="col-span-2">
-                  <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                    item.type === "Event" ? "bg-blue-100 text-blue-800" : "bg-purple-100 text-purple-800"
-                  }`}>{item.type}</span>
-                </div>
-                <div className="col-span-2 text-gray-500">{item.date}</div>
+        {/* Table */}
+        {!loadingArchived && !archivedError && (
+          <div className="overflow-x-auto">
+            <div className="min-w-full rounded-lg border border-gray-200">
+              {/* Header */}
+              <div className="grid grid-cols-12 gap-4 font-semibold text-gray-700 bg-gray-100 p-3 rounded-t-lg">
+                <div className="col-span-5">Title</div>
+                <div className="col-span-2">Type</div>
+                <div className="col-span-3">Date</div>
+                <div className="col-span-2 text-center">Actions</div>
               </div>
-            ))}
-          </div>
-        </section>
 
-        
-      </div>
+              {/* Rows */}
+              <div className="divide-y divide-gray-200">
+                {filteredArchived.length > 0 ? (
+                  filteredArchived.map((item, index) => (
+                    <div
+                      key={item.id || index}
+                      className="grid grid-cols-12 gap-4 items-center p-3 hover:bg-gray-50 transition"
+                    >
+                      <div className="col-span-5 font-medium text-gray-800">{item.title}</div>
+                      <div className="col-span-2 text-gray-600">{item.type}</div>
+                      <div className="col-span-3 text-gray-600">{item.date}</div>
+                      <div className="col-span-2 flex justify-center space-x-2">
+                        <button
+                          onClick={() => {
+                            setSelectedItem(item);
+                            setShowModal(true);
+                          }}
+                          className="text-red-500 hover:text-red-700 transition"
+                        >
+                          <Trash2 size={20} />
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-4 text-gray-500 text-center col-span-12">
+                    No archived items found.
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* ---------------- DELETE CONFIRMATION MODAL ---------------- */}
+      {showModal && selectedItem && (
+        <div className="fixed inset-0 flex items-center justify-center bg-opacity-40 backdrop-blur-sm z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-80">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+              Confirm Deletion
+            </h3>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete <strong>{selectedItem.title}</strong>?
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                className="px-4 py-2 rounded border border-gray-300 hover:bg-gray-100"
+                onClick={() => {
+                  setShowModal(false);
+                  setSelectedItem(null);
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 rounded bg-red-500 text-white hover:bg-red-600"
+                onClick={() => handleDelete(selectedItem.id, selectedItem.type)}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

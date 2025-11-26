@@ -12,7 +12,7 @@ const formatDate = (dateString) => {
   const date = new Date(dateString);
   return date.toLocaleDateString("en-US", {
     year: "numeric",
-    month: "long",
+    month: "long",  
     day: "numeric",
   });
 };
@@ -26,7 +26,7 @@ const AnnouncementTableRow = ({ announcement, onView }) => {
       <td className="p-4 text-gray-600 text-sm hidden sm:table-cell">{formatDate(announcement.created_at)}</td>
 
       <td className="p-4">
-        <span className={`px-3 py-1 text-xs font-semibold rounded-full ${statusBadge[announcement.status]}`}>
+        <span className={`px-3 py-1 text-xs font-semibold rounded-full ${statusBadge[announcement.approval_status]}`}>
           {announcement.approval_status}
         </span>
       </td>

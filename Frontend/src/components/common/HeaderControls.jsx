@@ -24,20 +24,7 @@ export default function HeaderControls ({ getMonthYear, previousMonth, nextMonth
           </button>
         </div>
 
-        <div className="flex gap-2 bg-gray-100 p-1 rounded-lg">
-          {['month', 'week', 'day'].map((mode) => (
-            <button key={mode}
-            onClick={() => setViewMode(mode)}
-            className={`px-5 py-2 rounded-mb text-sm font-semibold capitalize transition ${
-              viewMode === mode
-              ? 'bg-white text-red-600 shadow-sm'
-              : 'text-gray-600 hover:bg-white hover:bg-opacity-50'
-            }`}  
-          >
-            {mode}
-            </button>
-          ))}
-        </div>
+        
       </div>
     </div>
   )

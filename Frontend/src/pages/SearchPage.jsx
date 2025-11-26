@@ -1,87 +1,130 @@
 import { useState, useEffect } from "react";
 import Navbar from "../components/common/Navbar";
 import FiltersSidebar from "../components/common/FiltersSidebar";
+import { useNavigate } from "react-router-dom";
+
+// --------------------------------------------------
+// DATE FORMATTER
+// --------------------------------------------------
+const formatDate = (dateString) => {
+  const date = new Date(dateString);
+  const options = {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  };
+  return date.toLocaleString("en-US", options);
+};
 
 export default function SearchPage() {
-  const [events, setEvents] = useState([]);
-  const [filteredEvents, setFilteredEvents] = useState([]);
+  const [items, setItems] = useState([]); // merged events + announcements
+  const [filteredItems, setFilteredItems] = useState([]);
   const [filters, setFilters] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [announcementModal, setAnnouncementModal] = useState(null); // active announcement
+  const navigate = useNavigate();
+  const token = localStorage.getItem("token");
 
-  // ------------------------------
-  // FETCH EVENTS FROM BACKEND
-  // ------------------------------
+  // --------------------------------------------------
+  // FETCH EVENTS + ANNOUNCEMENTS
+  // --------------------------------------------------
   useEffect(() => {
-    const fetchEvents = async () => {
+    const loadData = async () => {
       try {
-        const res = await fetch("http://localhost:5100/api/events");
-        const data = await res.json();
+        // Fetch Events
+        const eventRes = await fetch("http://localhost:5100/api/events", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-        setEvents(data);
-        setFilteredEvents(data);
+        const events = await eventRes.json();
+
+        const eventList = events.map((e) => ({
+          ...e,
+          source: "event",
+          displayDate: e.event_date,
+          formattedDate: formatDate(e.event_date),
+          type: e.type || "Event",
+        }));
+
+        // Fetch Approved Announcements
+        const annRes = await fetch(
+          "http://localhost:5100/api/announcements/approved",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        const announcements = await annRes.json();
+
+        const annList = announcements.map((a) => ({
+          ...a,
+          source: "announcement",
+          displayDate: a.created_at,
+          formattedDate: formatDate(a.created_at),
+          title: a.title,
+          description: a.description,
+          category: "Announcement",
+          type: "Announcement",
+          status: "Approved",
+        }));
+
+        const merged = [...eventList, ...annList];
+
+        setItems(merged);
+        setFilteredItems(merged);
       } catch (err) {
-        console.error("Error fetching events:", err);
+        console.error("Error loading items:", err);
       }
     };
 
-    fetchEvents();
-  }, []);
+    loadData();
+  }, [token]);
 
-  const handleFilterChange = (newFilters) => setFilters(newFilters);
-
-  const handleClearAll = () => {
-    setFilters({
-      type: [],
-      category: [],
-      dateRange: "All Dates",
-      department: [],
-      status: [],
-    });
-
-    setFilteredEvents(events);
-  };
-
-  // ------------------------------
-  // APPLY FILTERS + SEARCH QUERY
-  // ------------------------------
+  // --------------------------------------------------
+  // FILTER + SEARCH FUNCTION
+  // --------------------------------------------------
   useEffect(() => {
-    let filtered = [...events];
+    let filtered = [...items];
 
     if (filters.type?.length) {
-      filtered = filtered.filter((e) => filters.type.includes(e.type));
+      filtered = filtered.filter((i) => filters.type.includes(i.type));
     }
     if (filters.category?.length) {
-      filtered = filtered.filter((e) => filters.category.includes(e.category));
+      filtered = filtered.filter((i) => filters.category.includes(i.category));
     }
     if (filters.department?.length) {
-      filtered = filtered.filter((e) =>
-        filters.department.includes(e.department)
+      filtered = filtered.filter((i) =>
+        filters.department.includes(i.department)
       );
     }
     if (filters.status?.length) {
-      filtered = filtered.filter((e) => filters.status.includes(e.status));
+      filtered = filtered.filter((i) => filters.status.includes(i.status));
     }
+
     if (filters.dateRange && filters.dateRange !== "All Dates") {
       const today = new Date();
-
-      filtered = filtered.filter((event) => {
-        const eventDate = new Date(event.date);
+      filtered = filtered.filter((item) => {
+        const date = new Date(item.displayDate);
 
         if (filters.dateRange === "Today")
-          return eventDate.toDateString() === today.toDateString();
+          return date.toDateString() === today.toDateString();
 
         if (filters.dateRange === "This Week") {
-          const start = new Date(today.setDate(today.getDate() - today.getDay()));
+          const start = new Date(today);
+          start.setDate(start.getDate() - start.getDay());
           const end = new Date(start);
           end.setDate(end.getDate() + 7);
-          return eventDate >= start && eventDate <= end;
+          return date >= start && date <= end;
         }
 
         if (filters.dateRange === "This Month") {
           return (
-            eventDate.getMonth() === today.getMonth() &&
-            eventDate.getFullYear() === today.getFullYear()
+            date.getMonth() === today.getMonth() &&
+            date.getFullYear() === today.getFullYear()
           );
         }
 
@@ -90,27 +133,41 @@ export default function SearchPage() {
     }
 
     if (searchQuery.trim()) {
-      filtered = filtered.filter((e) =>
-        e.title.toLowerCase().includes(searchQuery.toLowerCase())
+      filtered = filtered.filter((i) =>
+        i.title.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
-    setFilteredEvents(filtered);
-  }, [filters, searchQuery, events]);
+    setFilteredItems(filtered);
+  }, [filters, searchQuery, items]);
 
-  // ------------------------------
-  // UI RENDER
-  // ------------------------------
+  const handleFilterChange = (newFilters) => setFilters(newFilters);
+  const handleClearAll = () => {
+    setFilters({
+      type: [],
+      category: [],
+      dateRange: "All Dates",
+      department: [],
+      status: [],
+    });
+    setFilteredItems(items);
+  };
+
+  // --------------------------------------------------
+  // UI COMPONENT
+  // --------------------------------------------------
   return (
     <div className="min-h-screen bg-gray-100 relative overflow-hidden">
       <Navbar showSearchBar={true} setSearchQuery={setSearchQuery} />
 
       <main
         className={`flex p-6 gap-6 transition-all duration-300 ${
-          isFilterOpen ? "blur-sm pointer-events-none md:pointer-events-auto" : ""
+          isFilterOpen || announcementModal
+            ? "blur-sm pointer-events-none md:pointer-events-auto"
+            : ""
         }`}
       >
-        {/* Desktop Sidebar */}
+        {/* Desktop Filters */}
         <div className="hidden md:block">
           <FiltersSidebar
             onFilterChange={handleFilterChange}
@@ -129,99 +186,83 @@ export default function SearchPage() {
         {/* Main Content */}
         <div className="flex-1 bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
           <div className="flex justify-between items-center mb-4 flex-wrap gap-3">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-800">
-                Search Results for “{searchQuery}”
-              </h1>
-              <p className="text-sm text-gray-500">
-                {filteredEvents.length} result
-                {filteredEvents.length !== 1 && "s"} found
-              </p>
-            </div>
-
-            <div>
-              <select className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-400">
-                <option>Sort: Relevance</option>
-                <option>Sort: Date</option>
-                <option>Sort: Department</option>
-              </select>
-            </div>
+            <h1 className="text-2xl font-bold text-gray-800">
+              Search Results for “{searchQuery}”
+            </h1>
+            <p className="text-sm text-gray-500">
+              {filteredItems.length} result
+              {filteredItems.length !== 1 && "s"} found
+            </p>
           </div>
 
-          {/* Filter Chips */}
-          <div className="flex flex-wrap gap-2 mb-6">
-            {searchQuery && (
-              <span className="bg-red-100 text-red-600 text-sm px-3 py-1 rounded-full">
-                {searchQuery} ✕
-              </span>
-            )}
-            {filters.category?.map((cat) => (
-              <span
-                key={cat}
-                className="bg-gray-100 text-gray-700 text-sm px-3 py-1 rounded-full"
-              >
-                {cat}
-              </span>
-            ))}
-            {filters.status?.map((status) => (
-              <span
-                key={status}
-                className="bg-gray-100 text-gray-700 text-sm px-3 py-1 rounded-full"
-              >
-                {status}
-              </span>
-            ))}
-          </div>
-
-          {/* Events List */}
-          {filteredEvents.length === 0 ? (
-            <p className="text-gray-500 text-center mt-10">No results found.</p>
+          {filteredItems.length === 0 ? (
+            <p className="text-gray-500 text-center mt-10">
+              No results found.
+            </p>
           ) : (
             <div className="space-y-4">
-              {filteredEvents.map((item) => (
-                <div
-                  key={item.event_id}
-                  className="border border-gray-200 p-5 rounded-xl shadow-sm hover:shadow-md transition duration-150"
-                >
-                  <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-2">
-                    <h2 className="text-lg font-semibold text-gray-800">
-                      {item.title}
-                    </h2>
-                    <div className="flex gap-2 mt-2 sm:mt-0">
-                      <button className="border border-red-500 text-red-500 hover:bg-red-500 hover:text-white transition px-4 py-1 rounded-lg text-sm">
-                        View Details
-                      </button>
-                      <button className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded-lg text-sm">
-                        Register Now
-                      </button>
+              {filteredItems.map((item) => {
+                // Use unique keys for events and announcements
+                const itemKey =
+                  item.source === "announcement"
+                    ? `announcement-${item.announcement_id}`
+                    : `event-${item.event_id}`;
+
+                return (
+                  <div
+                    key={itemKey}
+                    className="border border-gray-200 p-5 rounded-xl shadow-sm hover:shadow-md transition duration-150"
+                  >
+                    <div className="flex justify-between items-center">
+                      <h2 className="text-lg font-semibold text-gray-800">
+                        {item.title}
+                      </h2>
+
+                      {item.source === "event" ? (
+                        <button
+                          onClick={() => navigate(`/events/${item.event_id}`)}
+                          className="border border-red-500 text-red-500 hover:bg-red-500 hover:text-white px-4 py-1 rounded-lg text-sm"
+                        >
+                          View Details
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => setAnnouncementModal(item)}
+                          className="border border-red-500 text-red-500 hover:bg-red-500 hover:text-white px-4 py-1 rounded-lg text-sm"
+                        >
+                          View Details
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="flex flex-wrap gap-2 mt-2 text-xs text-gray-600">
+                      <span className="bg-red-100 text-red-700 px-2 py-1 rounded-md">
+                        {item.type}
+                      </span>
+                      <span className="bg-gray-100 px-2 py-1 rounded-md">
+                        {item.category}
+                      </span>
+                      {item.organizer_name && (
+                        <span className="bg-gray-100 px-2 py-1 rounded-md">
+                          {item.organizer_name}
+                        </span>
+                      )}
+                    </div>
+
+                    <p className="text-gray-600 text-sm mt-2">{item.description}</p>
+
+                    <div className="text-xs text-gray-400 mt-2">
+                      📅 {item.formattedDate} | Status: {item.status}
                     </div>
                   </div>
-
-                  <div className="flex flex-wrap gap-2 mb-2 text-xs text-gray-600">
-                    <span className="bg-red-100 text-red-700 px-2 py-1 rounded-md">
-                      {item.type}
-                    </span>
-                    <span className="bg-gray-100 px-2 py-1 rounded-md">
-                      {item.category}
-                    </span>
-                    <span className="bg-gray-100 px-2 py-1 rounded-md">
-                      {item.organizer_name}
-                    </span>
-                  </div>
-
-                  <p className="text-gray-600 text-sm">{item.description}</p>
-
-                  <div className="text-xs text-gray-400 mt-2">
-                    📅 {item.event_date} | Status: {item.status}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
       </main>
 
-      {/* Mobile Slide-in Filters */}
+      {/* Mobile Filters Drawer */}
       {isFilterOpen && (
         <>
           <div
@@ -230,7 +271,7 @@ export default function SearchPage() {
           ></div>
 
           <div
-            className={`fixed top-0 left-0 h-full w-4/5 max-w-sm bg-white shadow-xl z-30 transform transition-transform duration-300 ease-in-out md:hidden ${
+            className={`fixed top-0 left-0 h-full w-4/5 max-w-sm bg-white shadow-xl z-30 transform transition-transform duration-300 md:hidden ${
               isFilterOpen ? "translate-x-0" : "-translate-x-full"
             }`}
           >
@@ -250,6 +291,46 @@ export default function SearchPage() {
                 onClearAll={handleClearAll}
               />
             </div>
+          </div>
+        </>
+      )}
+
+      {/* Announcement Modal */}
+      {announcementModal && (
+        <>
+          <div
+            onClick={() => setAnnouncementModal(null)}
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
+          ></div>
+
+          <div className="fixed top-1/2 left-1/2 z-50 w-11/12 max-w-lg -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl p-6 shadow-lg overflow-y-auto max-h-[80vh]">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-gray-800">
+                {announcementModal.title}
+              </h2>
+              <button
+                onClick={() => setAnnouncementModal(null)}
+                className="text-gray-500 hover:text-red-500 text-lg font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="text-xs text-gray-400 mb-2">
+              📅 {announcementModal.formattedDate} | Status:{" "}
+              {announcementModal.status}
+            </div>
+
+            <div className="flex flex-wrap gap-2 mb-4 text-xs text-gray-600">
+              <span className="bg-red-100 text-red-700 px-2 py-1 rounded-md">
+                {announcementModal.type}
+              </span>
+              <span className="bg-gray-100 px-2 py-1 rounded-md">
+                {announcementModal.category}
+              </span>
+            </div>
+
+            <p className="text-gray-600">{announcementModal.description}</p>
           </div>
         </>
       )}

@@ -1,71 +1,83 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Calendar from "react-calendar";
+import 'react-calendar/dist/Calendar.css';
 
 export default function CalendarCard() {
-  const [month, setMonth] = useState(8);
-  const [year, setYear] = useState(2025);
+  const [date, setDate] = useState(new Date());
   const navigate = useNavigate();
 
-  const monthNames = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December",
-  ];
-
-  const firstDay = new Date(year, month, 1).getDay();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-  const highlighted = [15, 16, 21, 25, 29];
-
-  const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
-  const daysArray = Array.from({ length: totalCells }, (_, i) => {
-    const dayNum = i - firstDay + 1;
-    return dayNum > 0 && dayNum <= daysInMonth ? dayNum : "";
-  });
-
   return (
-    <div className="bg-gray-100 p-4 rounded-2xl shadow-sm border border-gray-200">
-      <div className="flex justify-between items-center mb-3">
-        <h3 className="font-semibold text-gray-700">
-          {monthNames[month]} {year}
+    <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="font-semibold text-gray-800 text-lg">
+          {date.toLocaleString("default", { month: "long" })} {date.getFullYear()}
         </h3>
         <button 
           className="text-[#d64553] text-sm font-medium hover:underline"
           onClick={() => navigate("/user/calendar")}
-          >
+        >
           View Calendar
         </button>
       </div>
 
-      <div className="grid grid-cols-7 gap-2 text-center text-sm">
-        {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((d) => (
-          <div key={d} className="text-gray-500 font-medium">
-            {d}
-          </div>
-        ))}
-
-        {daysArray.map((day, i) => {
-          if (!day) return <div key={i} className="h-8 rounded-lg"></div>;
-
-          const isHighlighted = highlighted.includes(day);
-          const isPrimary = day === 16;
-
-          return (
-            <div
-              key={i}
-              className={`h-8 flex items-center justify-center rounded-lg font-medium
-                ${
-                  isPrimary
-                    ? "bg-[#d64553] text-white"
-                    : isHighlighted
-                    ? "bg-red-100 text-[#d64553]"
-                    : "bg-white text-gray-700"
-                } shadow-sm`}
-            >
-              {day}
-            </div>
-          );
-        })}
+      {/* Calendar Centered */}
+      <div className="flex justify-center">
+        <div className="w-full max-w-md">
+          <Calendar
+            onChange={setDate}
+            value={date}
+            className="react-calendar w-full border-none text-gray-700"
+          />
+        </div>
       </div>
+      
+      {/* Custom Tailwind Styling */}
+      <style jsx global>{`
+        .react-calendar {
+          border-radius: 1rem;
+          font-family: 'Inter', sans-serif;
+        }
+        .react-calendar__navigation button {
+          color: #d64553;
+          font-weight: 500;
+          min-width: 44px;
+          background: transparent;
+        }
+        .react-calendar__navigation button:enabled:hover,
+        .react-calendar__navigation button:enabled:focus {
+          background-color: #fde8e8;
+          border-radius: 0.5rem;
+        }
+        .react-calendar__month-view__weekdays {
+          text-transform: uppercase;
+          font-weight: 500;
+          font-size: 0.75rem;
+          color: #9ca3af;
+        }
+        .react-calendar__tile {
+          border-radius: 0.5rem;
+          height: 3rem;
+          line-height: 3rem;
+          transition: all 0.2s;
+        }
+        .react-calendar__tile:enabled:hover,
+        .react-calendar__tile:enabled:focus {
+          background: #fde8e8;
+          color: #d64553;
+        }
+        .react-calendar__tile--now {
+          background: #d64553;
+          color: white;
+          font-weight: 600;
+        }
+        .react-calendar__tile--active {
+          background: #fcd5d5;
+          color: #d64553;
+          border-radius: 0.5rem;
+        }
+      `}</style>
     </div>
   );
 }

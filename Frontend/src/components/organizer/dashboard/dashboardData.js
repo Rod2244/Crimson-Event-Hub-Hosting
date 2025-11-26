@@ -1,9 +1,9 @@
-import { Calendar, Bell, CircleCheckBig, Users } from 'lucide-react';
+import { Calendar, BellRing, Megaphone, Users } from 'lucide-react';
 
 export const stats = [
   { title: "My Events", value: 24, icon: Calendar, color: "bg-blue-100/50 text-blue-600" },
-  { title: "My Announcements", value: 5, icon: Bell, color: "bg-pink-100/50 text-pink-600" },
-  { title: "# of Created Approved", value: 18, icon: CircleCheckBig, color: "bg-green-100/50 text-green-600" },
+  { title: "My Announcements", value: 5, icon: Megaphone, color: "bg-pink-100/50 text-pink-600" },
+  { title: "Notifications", value: 18, icon: BellRing, color: "bg-green-100/50 text-green-600" },
   { title: "# of Attendees/Joined", value: 250, icon: Users, color: "bg-red-100/50 text-red-600" },
 ];
 

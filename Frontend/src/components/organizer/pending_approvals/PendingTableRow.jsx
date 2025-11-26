@@ -7,13 +7,26 @@ const statusBadge = {
   Pending: "bg-yellow-100 text-yellow-700",
 };
 
+const formatDate = (dateString) => {
+  if (!dateString) return "";
+
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "2-digit",
+    year: "numeric",
+  });
+};
+
 const PendingTableRow = ({ item, onView }) => (
   <tr className="border-b hover:bg-red-50 transition-colors">
     <td className="p-4 font-medium">{item.title}</td>
     <td className="p-4 text-gray-600 text-sm">{item.type}</td>
     <td className="p-4 text-gray-600 text-sm">{item.category}</td>
     <td className="p-4 text-gray-600 text-sm">{item.organizer}</td>
-    <td className="p-4 text-gray-600 text-sm hidden sm:table-cell">{item.createdAt}</td>
+    <td className="p-4 text-gray-600 text-sm hidden sm:table-cell">
+      {formatDate(item.createdAt)}
+    </td>
     <td className="p-4">
       <span className={`px-3 py-1 text-xs font-semibold rounded-full ${statusBadge[item.status]}`}>
         {item.status}

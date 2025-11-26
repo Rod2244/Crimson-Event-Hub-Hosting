@@ -1,6 +1,7 @@
 import db from "../database/database.js"; // your mysql2/promise pool
 import path from "path";
 import fs from "fs";
+import { createNotificationForStudents } from "./notificationController.js";
 
 // Controller for creating announcement
 export const createAnnouncement = async (req, res) => {
@@ -17,7 +18,7 @@ export const createAnnouncement = async (req, res) => {
 
         const { title, description, category, author } = req.body;
 
-        if (!title || !description || !category || !author) {
+        if (!title || !description || !category) {
             return res.status(400).json({ message: "Title, description, category, and author are required" });
         }
 
@@ -137,4 +138,50 @@ export const getApprovedOrPendingAnnouncements = async (req, res) => {
     }
 };
 
+export const getAnnouncementById = async (req, res) => {
+  try {
+    const { id } = req.params;
 
+    const sql = `
+      SELECT announcement_id, title, category, author, description, file_name, file_path, approval_status, status, created_at
+      FROM announcement
+      WHERE announcement_id = ?
+    `;
+
+    const [rows] = await db.query(sql, [id]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "Announcement not found" });
+    }
+
+    const announcement = rows[0];
+
+    // Optional: add a download URL for frontend
+    if (announcement.file_path) {
+      announcement.file_url = `/uploads/announcements/${announcement.file_path}`;
+    }
+
+    return res.json(announcement);
+  } catch (err) {
+    console.error("ERROR FETCHING ANNOUNCEMENT BY ID:", err);
+    return res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
+
+export const approveAnnouncement = async (req, res) => {
+  try {
+    const { announcement_id } = req.params;
+    const io = req.app.get("io"); // get the socket instance
+
+    const sql = `UPDATE announcement SET status = 'approve' WHERE announcement_id = ? AND status != 'archive'`;
+    await db.query(sql, [announcement_id]);
+
+    // Create notifications and emit
+    await createNotificationForStudents("Announcement", announcement_id, io);
+
+    res.status(200).json({ message: "Announcement approved and notifications sent" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};

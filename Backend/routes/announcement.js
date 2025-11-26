@@ -1,6 +1,12 @@
 import express from "express";
 import announcementUpload from "../middleware/announcementUpload.js";
-import { createAnnouncement, getApprovedAnnouncements, getApprovedOrPendingAnnouncements } from "../controllers/announcementController.js";
+import { 
+  createAnnouncement, 
+  getApprovedAnnouncements,
+  getApprovedOrPendingAnnouncements, 
+  getAnnouncementById,
+  approveAnnouncement // 👈 new controller
+} from "../controllers/announcementController.js";
 import { verifyToken } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
@@ -18,5 +24,11 @@ router.get("/approved", getApprovedAnnouncements);
 
 // Fetch approved OR pending announcements
 router.get("/", verifyToken, getApprovedOrPendingAnnouncements);
+
+// Approve announcement (Admin / Organizer)
+router.put("/approve/:announcement_id", verifyToken, approveAnnouncement);
+
+// Fetch single announcement
+router.get("/:id", verifyToken, getAnnouncementById);
 
 export default router;

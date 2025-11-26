@@ -65,6 +65,9 @@ const NotificationItem = ({ notification, onClick }) => {
 // --- Notification Modal ---
 const NotificationModal = ({ notification, onClose }) => {
   if (!notification) return null;
+
+  console.log("NOTIFICATION DATA:", notification);
+
   const isApproved = notification.status?.toLowerCase() === 'approved';
 
   return (
@@ -111,6 +114,23 @@ const NotificationModal = ({ notification, onClose }) => {
                   : "Please review the feedback and update your proposal."
                 }
               </p>
+
+              {/* Remarks Section */}
+              {notification.remarks && (
+                <p
+                  className={`mt-2 text-sm font-medium ${
+                    isApproved
+                      ? "text-green-600"
+                      : notification.status === "Rejected"
+                      ? "text-red-600"
+                      : "text-yellow-600"
+                  }`}
+                >
+                  <span className="font-semibold">Remarks: </span>
+                  {notification.remarks}
+                </p>
+              )}
+
               {!isApproved && notification.rejectionNote && (
                 <div className="mt-3 bg-white bg-opacity-60 p-3 rounded-lg border border-red-200 text-sm text-red-800">
                   <span className="font-bold">Note from Admin:</span> {notification.rejectionNote}

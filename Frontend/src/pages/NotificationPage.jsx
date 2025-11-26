@@ -1,82 +1,126 @@
 import Navbar from "../components/common/Navbar";
-import { useState } from "react";
-import { Calendar, Bell, Megaphone, CheckCircle, XCircle, Info } from "lucide-react";
+import { useState, useEffect } from "react";
+import axios from "axios";
+import { io } from "socket.io-client";
+import { Calendar, Megaphone, Info } from "lucide-react";
 
 export default function NotificationPage() {
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      title: "New Event: CCS Hackathon 2025",
-      message: "A new event has been posted. Registration is now open!",
-      time: "2 hours ago",
-      category: "Events",
-      icon: <Calendar className="text-red-500" size={24} />,
-      read: false,
-    },
-    {
-      id: 2,
-      title: "Event Reminder: Career Fair Tomorrow",
-      message: "Career Fair 2025 is happening tomorrow at 9:00 AM. Don’t forget to attend!",
-      time: "5 hours ago",
-      category: "Reminders",
-      icon: <Bell className="text-pink-500" size={24} />,
-      read: false,
-    },
-    {
-      id: 3,
-      title: "Important: Midterm Schedule Posted",
-      message: "The midterm schedule for AY 2024-2025 has been posted.",
-      time: "1 day ago",
-      category: "Announcements",
-      icon: <Megaphone className="text-orange-500" size={24} />,
-      read: true,
-    },
-    {
-      id: 4,
-      title: "Submission Approved",
-      message: "Your event 'Blood Donation Drive' has been approved and published.",
-      time: "2 days ago",
-      category: "Approvals",
-      icon: <CheckCircle className="text-green-500" size={24} />,
-      read: true,
-    },
-    {
-      id: 5,
-      title: "Registration Confirmed",
-      message: "You have successfully registered for 'Tech Summit 2025'.",
-      time: "3 days ago",
-      category: "Registrations",
-      icon: <Info className="text-blue-500" size={24} />,
-      read: true,
-    },
-    {
-      id: 6,
-      title: "Event Cancelled: Basketball Practice",
-      message: "The basketball practice scheduled for next week has been cancelled.",
-      time: "4 days ago",
-      category: "Events",
-      icon: <XCircle className="text-red-600" size={24} />,
-      read: true,
-    },
-  ]);
-
+  const [notifications, setNotifications] = useState([]);
   const [activeCategory, setActiveCategory] = useState("All");
-  const categories = ["All", "Unread", "Events", "Announcements", "Reminders", "Registrations", "Approvals"];
+  const categories = ["All", "Unread", "Events", "Announcements"];
+
+  const token = localStorage.getItem("token");
+  const userId = localStorage.getItem("userId"); // Ensure you store userId on login
+
+  // Helper to map type to icon
+  const getNotificationIcon = (type) => {
+    switch (type) {
+      case "Event":
+        return <Calendar className="text-red-500" size={24} />;
+      case "Announcement":
+        return <Megaphone className="text-orange-500" size={24} />;
+      default:
+        return <Info className="text-blue-500" size={24} />;
+    }
+  };
+
+  // Fetch notifications from backend
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const res = await axios.get("http://localhost:5100/api/notifications", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        // Filter only Event and Announcement
+        const filtered = res.data
+          .filter((n) => n.type === "Event" || n.type === "Announcement")
+          .map((n) => ({
+            id: n.notification_id,
+            title: n.title,
+            message: n.description || "",
+            time: n.created_at,
+            category: n.type,
+            icon: getNotificationIcon(n.type),
+            read: n.status === "read",
+          }));
+
+        setNotifications(filtered);
+      } catch (err) {
+        console.error("Error fetching notifications:", err);
+      }
+    };
+
+    fetchNotifications();
+  }, [token]);
+
+  // Real-time Socket.IO setup
+  useEffect(() => {
+    const socket = io("http://localhost:5100");
+
+    if (userId) {
+      socket.emit("join", userId); // Join a room for this user
+    }
+
+    socket.on("newNotification", (notification) => {
+      console.log("Received new notification:", notification);
+
+      setNotifications((prev) => [
+        {
+          id: notification.notification_id,
+          title: notification.title,
+          message: notification.description || "",
+          time: notification.created_at,
+          category: notification.type,
+          icon: getNotificationIcon(notification.type),
+          read: false,
+        },
+        ...prev,
+      ]);
+    });
+
+    return () => socket.disconnect();
+  }, [userId]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const handleMarkAllRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  const handleMarkRead = async (id) => {
+    try {
+      await axios.put(
+        `http://localhost:5100/api/notifications/read/${id}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+      );
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const handleMarkRead = (id) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-    );
+  const handleMarkAllRead = async () => {
+    try {
+      await axios.put(
+        `http://localhost:5100/api/notifications/read-all`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const handleDelete = (id) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`http://localhost:5100/api/notifications/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const filteredNotifications =
@@ -90,7 +134,7 @@ export default function NotificationPage() {
     <div className="min-h-screen bg-gray-100">
       <Navbar />
       <main className="max-w-4xl mx-auto p-6">
-        {/* Header Section */}
+        {/* Header */}
         <section className="bg-gray-100 py-4 px-6 border-t border-[#d64553] justify-between rounded-lg flex items-center mb-6">
           <div>
             <h2 className="text-2xl font-semibold text-gray-800">Notifications</h2>
@@ -111,6 +155,7 @@ export default function NotificationPage() {
           )}
         </section>
 
+        {/* Category Filters */}
         <div className="flex flex-wrap gap-3 mb-5">
           {categories.map((category) => {
             const isActive = activeCategory === category;
@@ -130,6 +175,7 @@ export default function NotificationPage() {
           })}
         </div>
 
+        {/* Notification List */}
         <div className="space-y-4">
           {filteredNotifications.map((n) => (
             <div

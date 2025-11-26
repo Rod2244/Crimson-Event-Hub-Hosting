@@ -13,7 +13,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => (
       className={`fixed lg:sticky top-0 left-0 h-screen w-64 bg-red-700 p-4 transition-transform duration-300 ease-in-out z-30
       ${isOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'}`}
     >
-      <div className="flex items-center mb-10">
+      <div className="flex items-center mt-5 mb-10">
         <Briefcase className="w-8 h-8 text-white mr-2" />
         <h1 className="text-xl font-bold text-white">Crimson Event Hub</h1>
         <button className="ml-auto text-white lg:hidden" onClick={toggleSidebar}>
@@ -25,7 +25,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => (
         <NavLink icon={LayoutDashboard} label="Dashboard" to="/organizer/dashboard" />
         <NavLink icon={Calendar} label="My Events" to="/organizer/eventmanagement" />
         <NavLink icon={Bell} label="My Announcements" to="/organizer/announcementmanagement" />
-        <NavLink icon={Users} label="Registration" to="/organizer/registrationmanagement" />
+        <NavLink icon={Users} label="Attendees" to="/organizer/registrationmanagement" />
         <NavLink icon={Clock} label="Pending Approvals" to="/organizer/pending_approval" />
         <NavLink icon={BellRing} label="Notifications" to="/organizer/notification" />
         <NavLink icon={Settings} label="Settings" to="/organizer/settings" />

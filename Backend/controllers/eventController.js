@@ -1,5 +1,6 @@
 import db from "../database/database.js"; // Connection pool
 import fs from "fs";
+import { createNotificationForStudents } from "./notificationController.js";
 
 // -----------------------------------------------------
 // CREATE EVENT
@@ -157,11 +158,20 @@ export const getAllEvents = async (req, res) => {
         let query, params;
 
         if (roleId === 3) {
-            // Admin: see all events
+            // Admin: see all events that are approved
             query = `
                 SELECT event_id, title, description, event_date, event_time, category, organizer_name, approval_status AS status, created_at 
                 FROM event 
-                WHERE approval_status IN ('approved')
+                WHERE approval_status = 'approved' AND status != 'archived'
+                ORDER BY created_at DESC
+            `;
+            params = [];
+        } else if (roleId === 1) {
+            // Role 1: also see all approved events
+            query = `
+                SELECT event_id, title, description, location, event_date, event_time, category, organizer_name, approval_status, status, created_at 
+                FROM event 
+                WHERE approval_status = 'approved' AND status != 'archived'
                 ORDER BY created_at DESC
             `;
             params = [];
@@ -170,7 +180,7 @@ export const getAllEvents = async (req, res) => {
             query = `
                 SELECT event_id, title, description, event_date, event_time, category, organizer_name, approval_status AS status, created_at 
                 FROM event 
-                WHERE user_id = ? AND approval_status IN ('approved', 'rejected')
+                WHERE user_id = ? AND approval_status IN ('approved', 'rejected') AND status != 'archived'
                 ORDER BY created_at DESC
             `;
             params = [userId];
@@ -184,6 +194,7 @@ export const getAllEvents = async (req, res) => {
         res.status(500).json({ message: "Failed to fetch events", error: error.message });
     }
 };
+
 
 
 // -----------------------------------------------------
@@ -234,4 +245,23 @@ export const getEventById = async (req, res) => {
         console.error('Error fetching event details:', error);
         return res.status(500).json({ message: 'Failed to fetch event details', error: error.message });
     }
+};
+
+// When updating status
+export const approveEvent = async (req, res) => {
+  try {
+    const { event_id } = req.params;
+    const io = req.app.get("io"); // get the socket instance
+
+    const sql = `UPDATE event SET status = 'approve' WHERE event_id = ? AND status != 'archive'`;
+    await db.query(sql, [event_id]);
+
+    // Create notifications and emit
+    await createNotificationForStudents("Event", event_id, io);
+
+    res.status(200).json({ message: "Event approved and notifications sent" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
 };

@@ -4,7 +4,7 @@ const AnnouncementDetailModal = ({ announcement, onClose }) => {
   if (!announcement) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+    <div className="fixed inset-0 bg-opacity-50 flex justify-center items-center z-50">
       <div className="bg-white rounded-xl shadow-lg max-w-2xl w-full p-6 relative">
         <button
           onClick={onClose}

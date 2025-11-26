@@ -116,10 +116,10 @@ export default function UserPage() {
             />
 
             <Button
-              label="Registered Events"
-              onClick={() => setActiveTab("settings")}
+              label="Joined Events"
+              onClick={() => setActiveTab("joined")}
               className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
-                activeTab === "settings"
+                activeTab === "joined"
                   ? "bg-red-700 text-white shadow-md scale-105"
                   : "bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300"
               }`}
@@ -129,7 +129,7 @@ export default function UserPage() {
           {/* Tab Content */}
           <div className="mt-8">
             {activeTab === "info" && <ProfileTab user={user} />}
-            {activeTab === "settings" && <RegisteredTab />}
+            {activeTab === "joined" && <RegisteredTab />}
           </div>
         </div>
       </main>

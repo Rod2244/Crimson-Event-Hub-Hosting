@@ -1,5 +1,13 @@
 import express from "express";
-import { createEvent, getAllEvents, deleteEvent, getEventById } from "../controllers/eventController.js";
+import { 
+  createEvent, 
+  getAllEvents, 
+  deleteEvent, 
+  getEventById,
+  approveEvent // 👈 import the new controller
+} from "../controllers/eventController.js";
+import { joinEvent, getEventAttendees } from "../controllers/joinEventController.js";
+import { getUserJoinedEvents, getOrganizerEvents } from "../controllers/getUserJoinedEventsController.js";
 import upload from "../config/multerEvents.js";
 import { verifyToken } from "../middleware/authMiddleware.js";
 
@@ -16,13 +24,20 @@ router.post(
   createEvent
 );
 
-// GET /events — list events (user-specific)
+// GET /events — list events
 router.get("/", verifyToken, getAllEvents);
 
-// DELETE /events/:id
-router.delete("/:id", verifyToken, deleteEvent);
+// Additional user/organizer endpoints
+router.get("/joined", verifyToken, getUserJoinedEvents);
+router.get("/organizer", verifyToken, getOrganizerEvents);
+router.get("/attendees/:eventId", verifyToken, getEventAttendees);
+router.post("/join/:eventId", verifyToken, joinEvent);
 
-// GET /events/:id
+// ✅ Approve Event (Admin / Organizer)
+router.put("/approve/:event_id", verifyToken, approveEvent);
+
+// Dynamic routes for ID must come last
 router.get("/:id", verifyToken, getEventById);
+router.delete("/:id", verifyToken, deleteEvent);
 
 export default router;

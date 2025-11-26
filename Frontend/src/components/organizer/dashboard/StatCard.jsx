@@ -1,17 +1,20 @@
 import React from 'react';
 
-const StatCard = ({ title, value, icon: Icon, color }) => (
-  <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition duration-300 border border-gray-100">
-    <div className="flex justify-between items-start">
-      <div>
-        <p className="text-sm font-medium text-gray-500">{title}</p>
-        <p className="text-3xl font-extrabold text-gray-900 mt-1">{value}</p>
+const StatCard = ({ title, count, color, type, icon: Icon, onClick }) => {
+  return (
+    <div
+      onClick={onClick}
+      className={`bg-white p-6 rounded-2xl shadow-lg border border-gray-100 cursor-pointer flex items-center gap-4 hover:shadow-xl transition`}
+    >
+      <div className={`p-3 rounded-full bg-${color}-100 text-${color}-600`}>
+        {Icon && <Icon size={24} />}
       </div>
-      <div className={`p-3 rounded-full ${color}`}>
-        <Icon size={24} />
+      <div>
+        <p className="text-sm text-gray-500">{title}</p>
+        <p className="text-2xl font-bold text-gray-900">{count}</p>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default StatCard;

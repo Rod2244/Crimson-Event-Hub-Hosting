@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { Send, UploadCloud, ArrowLeft } from "lucide-react";
+import { Send, UploadCloud, ArrowLeft, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-const CATEGORIES = ["General", "Event", "Memo", "Reminder", "Urgent"]; // predefined options
+const CATEGORIES = ["General", "Event", "Memo", "Reminder", "Urgent"];
 
 export default function AdminAnnouncementSubmissionForm() {
   const navigate = useNavigate();
@@ -14,6 +14,14 @@ export default function AdminAnnouncementSubmissionForm() {
     attachment: null,
   });
 
+  const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState({ show: false, message: "", type: "" });
+
+  const showToast = (msg, type = "success") => {
+    setToast({ show: true, message: msg, type });
+    setTimeout(() => setToast({ show: false, message: "", type: "" }), 2500);
+  };
+
   const handleChange = (field, value) => {
     setFormData({ ...formData, [field]: value });
   };
@@ -23,53 +31,64 @@ export default function AdminAnnouncementSubmissionForm() {
   };
 
   const handleSubmit = async () => {
-    // Required fields
-    const requiredFields = ["title", "description", "category"];
-    for (let field of requiredFields) {
-      if (!formData[field] || formData[field].trim() === "") {
-        alert(`Please fill in: ${field}`);
+    if (loading) return;
+
+    const required = ["title", "description", "category"];
+    for (let f of required) {
+      if (!formData[f]?.trim()) {
+        showToast(`Please fill in: ${f}`, "error");
         return;
       }
     }
 
-    // Create FormData for file upload
     const form = new FormData();
     form.append("title", formData.title);
     form.append("description", formData.description);
     form.append("category", formData.category);
-
-    if (formData.attachment) {
-      form.append("attachment", formData.attachment);
-    }
+    if (formData.attachment) form.append("attachment", formData.attachment);
 
     const token = localStorage.getItem("token");
-    console.log("Token:", token);
+
+    setLoading(true);
+
     try {
       const res = await fetch("http://localhost:5100/api/announcements/create", {
-        
         method: "POST",
         body: form,
-        headers: {
-            Authorization: `Bearer ${token}` // <-- send token
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       const data = await res.json();
 
       if (res.ok) {
-        alert("Announcement submitted successfully!");
-        navigate("/admin/announcementpage");
+        showToast("Announcement submitted successfully!");
+        setTimeout(() => {
+          navigate("/admin/announcementpage");
+        }, 1500);
       } else {
-        alert("Error submitting announcement: " + data.message);
+        showToast(data.message || "Error submitting announcement", "error");
       }
     } catch (err) {
-      console.error("Error submitting announcement:", err);
-      alert("Server error while submitting announcement.");
+      console.error("Error:", err);
+      showToast("Server error occurred.", "error");
     }
+
+    setLoading(false);
   };
 
   return (
     <div className="flex-1 bg-gray-100 min-h-screen overflow-y-auto p-10">
+      
+      {/* Toast Notification */}
+      {toast.show && (
+        <div
+          className={`fixed top-6 right-6 px-5 py-3 rounded-xl shadow-lg text-white text-sm font-medium animate-fade-in 
+          ${toast.type === "error" ? "bg-red-600" : "bg-green-600"}`}
+        >
+          {toast.message}
+        </div>
+      )}
+
       <div className="max-w-6xl mx-auto">
 
         {/* Back Button */}
@@ -87,14 +106,14 @@ export default function AdminAnnouncementSubmissionForm() {
           <p className="text-gray-500 mt-1">Fill in the details below to create a new announcement.</p>
         </div>
 
-        {/* Form */}
+        {/* Form Container */}
         <div className="bg-white p-8 rounded-xl shadow-md border border-gray-200 space-y-8">
 
-          {/* Basic Information */}
+          {/* Basic Info */}
           <div>
             <h2 className="text-lg font-semibold mb-4 text-gray-700">Basic Information</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
 
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
                 <label className="text-sm font-medium text-gray-600">
                   Title <span className="text-red-600">*</span>
@@ -118,11 +137,12 @@ export default function AdminAnnouncementSubmissionForm() {
                   className="w-full mt-1 px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-red-600 outline-none"
                 >
                   {CATEGORIES.map((cat) => (
-                    <option key={cat} value={cat}>{cat}</option>
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
                   ))}
                 </select>
               </div>
-
             </div>
 
             <div className="mt-6">
@@ -159,14 +179,16 @@ export default function AdminAnnouncementSubmissionForm() {
             )}
           </div>
 
-          {/* Submit Button */}
+          {/* Submit */}
           <div className="flex justify-end pt-6 border-t">
             <button
               onClick={handleSubmit}
-              className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg flex items-center gap-2 font-medium shadow-md"
+              disabled={loading}
+              className={`px-6 py-3 rounded-lg flex items-center gap-2 font-medium shadow-md text-white
+              ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-red-600 hover:bg-red-700"}`}
             >
-              <Send size={18} />
-              Submit Announcement
+              {loading ? <Loader2 className="animate-spin" size={18} /> : <Send size={18} />}
+              {loading ? "Submitting..." : "Submit Announcement"}
             </button>
           </div>
 

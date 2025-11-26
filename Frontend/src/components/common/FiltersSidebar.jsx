@@ -1,44 +1,36 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 const FiltersSidebar = ({ onClearAll, onFilterChange }) => {
   const [filters, setFilters] = useState({
     type: [],
     category: [],
-    dateRange: "All Dates",
-    department: [],
     status: [],
   });
 
+  // Handle checkbox selection
   const handleCheckboxChange = (section, value) => {
     setFilters((prev) => {
       const current = prev[section];
-      const updated =
-        current.includes(value)
-          ? current.filter((v) => v !== value)
-          : [...current, value];
-      const newFilters = { ...prev, [section]: updated };
-      onFilterChange?.(newFilters);
-      return newFilters;
+      const updated = current.includes(value)
+        ? current.filter((v) => v !== value)
+        : [...current, value];
+      return { ...prev, [section]: updated };
     });
   };
 
-  const handleDateChange = (value) => {
-    setFilters((prev) => {
-      const newFilters = { ...prev, dateRange: value };
-      onFilterChange?.(newFilters);
-      return newFilters;
-    });
-  };
+  useEffect(() => {
+    onFilterChange?.(filters);
+  }, [filters]);
+
 
   const handleClear = () => {
-    setFilters({
+    const cleared = {
       type: [],
       category: [],
-      dateRange: "All Dates",
-      department: [],
       status: [],
-    });
-    onClearAll?.();
+    };
+    setFilters(cleared);
+    onClearAll?.(cleared);
   };
 
   return (
@@ -53,8 +45,9 @@ const FiltersSidebar = ({ onClearAll, onFilterChange }) => {
         </button>
       </div>
 
+      {/* Type Section */}
       <Section title="Type">
-        {["Events", "Announcements"].map((type) => (
+        {["Event", "Announcement"].map((type) => (
           <Checkbox
             key={type}
             label={type}
@@ -64,60 +57,36 @@ const FiltersSidebar = ({ onClearAll, onFilterChange }) => {
         ))}
       </Section>
 
+      {/* Category Section */}
       <Section title="Category">
-        {["Academic", "Organization", "Sports", "Cultural", "Career"].map(
-          (cat) => (
-            <Checkbox
-              key={cat}
-              label={cat}
-              checked={filters.category.includes(cat)}
-              onChange={() => handleCheckboxChange("category", cat)}
-            />
-          )
-        )}
-      </Section>
-
-      <Section title="Date Range">
-        {["All Dates", "Today", "This Week", "This Month"].map(
-          (date) => (
-            <Radio
-              key={date}
-              label={date}
-              name="dateRange"
-              checked={filters.dateRange === date}
-              onChange={() => handleDateChange(date)}
-            />
-          )
-        )}
-      </Section>
-
-      <Section title="Department">
-        {["CCS", "COE", "CTE", "CLA", "All Department"].map((dept) => (
+        {["Academic", "Non-Academic"].map((cat) => (
           <Checkbox
-            key={dept}
-            label={dept}
-            checked={filters.department.includes(dept)}
-            onChange={() => handleCheckboxChange("department", dept)}
+            key={cat}
+            label={cat}
+            checked={filters.category.includes(cat)}
+            onChange={() => handleCheckboxChange("category", cat)}
           />
         ))}
       </Section>
 
+      {/* Status Section */}
       <Section title="Status">
-        {["Open for Registration", "Full", "Upcoming", "Completed"].map(
-          (status) => (
-            <Checkbox
-              key={status}
-              label={status}
-              checked={filters.status.includes(status)}
-              onChange={() => handleCheckboxChange("status", status)}
-            />
-          )
-        )}
+        {["Upcoming", "Ongoing"].map((status) => (
+          <Checkbox
+            key={status}
+            label={status}
+            checked={filters.status.includes(status)}
+            onChange={() => handleCheckboxChange("status", status)}
+          />
+        ))}
       </Section>
     </div>
   );
 };
 
+// ---------------------
+// Sub-components
+// ---------------------
 const Section = ({ title, children }) => (
   <div className="mb-4">
     <h3 className="text-sm font-semibold text-gray-600 mb-2">{title}</h3>
@@ -132,19 +101,6 @@ const Checkbox = ({ label, checked, onChange }) => (
       checked={checked}
       onChange={onChange}
       className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-    />
-    <span>{label}</span>
-  </label>
-);
-
-const Radio = ({ label, name, checked, onChange }) => (
-  <label className="flex items-center space-x-2 text-sm text-gray-700 cursor-pointer">
-    <input
-      type="radio"
-      name={name}
-      checked={checked}
-      onChange={onChange}
-      className="w-4 h-4 text-red-600 focus:ring-red-500"
     />
     <span>{label}</span>
   </label>

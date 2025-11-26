@@ -1,33 +1,96 @@
 import UpcomingEvent from "./UpcomingEvent";
-import CalendarCard from "./CalendarCard";
+import CalendarCard from "../admin/AdminCalendar";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-export default function Dashboard({className = ""}) {
+export default function Dashboard({ className = "" }) {
   const navigate = useNavigate();
-  const upcoming = [
-    { date: "21", month: "Sept", title: "Career Fair 2025", time: "9:00 AM – 4:00 PM" },
-    { date: "25", month: "Sept", title: "Research Symposium", time: "1:00 PM – 5:00 PM" },
-    { date: "29", month: "Sept", title: "Midterm Exams Begin", time: "All Day" },
-  ];
+
+  const [upcoming, setUpcoming] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const formatTime = (timeStr) => {
+    if (!timeStr) return "All Day";
+    const parts = timeStr.split("–").map((t) => t.trim());
+    const formatted = parts
+      .map((t) => {
+        const [hours, minutes] = t.split(":");
+        if (!hours || !minutes) return t;
+        const date = new Date();
+        date.setHours(hours, minutes, 0);
+        return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true });
+      })
+      .join(" – ");
+    return formatted;
+  };
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    fetch("http://localhost:5100/api/events", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (!Array.isArray(data)) return;
+
+        const upcomingEvents = data
+          .filter(
+            (e) =>
+              e.approval_status?.toLowerCase() === "approved" &&
+              e.status?.toLowerCase() === "upcoming"
+          )
+          .sort((a, b) => new Date(a.event_date) - new Date(b.event_date))
+          .slice(0, 5);
+
+        setUpcoming(upcomingEvents);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Error fetching events:", err);
+        setLoading(false);
+      });
+  }, []);
 
   return (
-    <div className={`p-6 bg-gray-100 min-h-screen text-gray-800 space-y-6 ${className}`}>
+    <div className={`bg-gray-100 text-gray-800 ${className}`}>
+      {/* Use flex to place calendar and events side by side */}
+      <div className="flex flex-col md:flex-row gap-4 p-6">
+        {/* Calendar */}
+        <div className="md:w-1/3">
+          <CalendarCard />
+        </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <CalendarCard />
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 md:col-span-2">
+        {/* Upcoming Events */}
+        <div className="md:w-2/3 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
           <div className="flex justify-between items-center mb-3">
             <h3 className="font-semibold">Upcoming Events</h3>
-            <button 
+            <button
               onClick={() => navigate("/events")}
-              className="text-[#d64553] text-sm font-medium hover:underline">
+              className="text-[#d64553] text-sm font-medium hover:underline"
+            >
               View All
             </button>
           </div>
+
           <div className="divide-y">
-            {upcoming.map((u, i) => (
-              <UpcomingEvent key={i} {...u} />
-            ))}
+            {loading ? (
+              <p className="text-gray-500 text-sm">Loading...</p>
+            ) : upcoming.length > 0 ? (
+              upcoming.map((event) => (
+                <UpcomingEvent
+                  key={event.event_id}
+                  date={new Date(event.event_date).getDate()}
+                  month={new Date(event.event_date).toLocaleString("en-US", {
+                    month: "short",
+                  })}
+                  title={event.title}
+                  time={formatTime(event.event_time)}
+                />
+              ))
+            ) : (
+              <p className="text-gray-500 text-sm py-4">No upcoming events</p>
+            )}
           </div>
         </div>
       </div>

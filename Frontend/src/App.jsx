@@ -6,7 +6,6 @@ import EventDetails from "./pages/EventDetails";
 import AboutPage from "./pages/AboutPage";
 import UserPage from "./pages/UserPage";
 import EditProfilePage from "./pages/EditprofilePage";
-import NotificationPage from "./pages/NotificationPage";
 import SearchPage from "./pages/SearchPage";
 import OrganizerPage from "./pages/OrganizerPage";
 import ProtectedRoute from "./components/common/ProtectedRoute";
@@ -39,11 +38,9 @@ export default function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/homepage" element={<HomePage />} />
-          <Route path="/homepage/:id" element={<EventDetails />} />
+          <Route path="/events/:id" element={<EventDetails />} />
           <Route path="/events" element={<SearchPage />} />
           
-          <Route path="/notificationpage" element={<NotificationPage />} />
-
           {/* User routes */}
           <Route
             path="/user/profile"
@@ -216,7 +213,7 @@ export default function App() {
             }
           />
           <Route
-            path="/admin/settings"
+            path="/admin/archivedpage"
             element={
               <ProtectedRoute allowedRoles={[3]}>
                 <AdminSettingPage />

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, Calendar, Megaphone, Users, Settings, LogOut, FileClock } from 'lucide-react';
+import { LayoutDashboard, Calendar, Megaphone, Users, ArchiveRestore, LogOut, FileClock } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import logo from "../../assets/logo.jpg"; 
 import { useUser } from "../../context/UserContext";
@@ -19,7 +19,7 @@ const Sidebar = () => {
         { name: 'Announcements', icon: Megaphone, active: false, path: '/admin/announcementpage' },
         { name: 'Users', icon: Users, active: false, path: '/admin/userpage' },
         { name: 'Pending Approvals', icon: FileClock, active: false, path: '/admin/pendingapprovalpage' },
-        { name: 'Settings', icon: Settings, active: false, path: '/admin/settings' },
+        { name: 'Archived', icon: ArchiveRestore, active: false, path: '/admin/archivedpage' },
     ];
 
     const handleLogout = () => {

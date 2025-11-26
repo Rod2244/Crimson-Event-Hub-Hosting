@@ -73,62 +73,95 @@ export const getUserProfile = async (req, res) => {
 export const updateUserProfile = async (req, res) => {
   try {
     const userId = req.user.id;
+
     const {
-      firstname, lastname, birthday, gender, email,
-      student_id, department, year_level, course, phone,
-      currentPassword, newPassword,
+      firstname,
+      lastname,
+      birthday,
+      gender,
+      email,
+      student_id,
+      department,
+      year_level,
+      course,
+      phone,
+      currentPassword,
+      newPassword,
     } = req.body;
 
-    const [results] = await db.query("SELECT * FROM user WHERE user_id = ?", [userId]);
-    if (results.length === 0) return res.status(404).json({ message: "User not found" });
+    // Get existing user
+    const [results] = await db.query(
+      "SELECT * FROM user WHERE user_id = ?",
+      [userId]
+    );
+
+    if (results.length === 0)
+      return res.status(404).json({ message: "User not found" });
 
     const user = results[0];
+
     let hashedPassword = user.password;
 
-    // Handle password change
+    // ✔ Handle password change
     if (newPassword) {
-      if (!currentPassword) return res.status(400).json({ message: "Current password is required" });
+      if (!currentPassword)
+        return res
+          .status(400)
+          .json({ message: "Current password is required" });
+
       const isMatch = await bcrypt.compare(currentPassword, user.password);
-      if (!isMatch) return res.status(400).json({ message: "Current password is incorrect" });
+      if (!isMatch)
+        return res
+          .status(400)
+          .json({ message: "Current password is incorrect" });
+
       hashedPassword = await bcrypt.hash(newPassword, 10);
     }
 
-    // Handle profile image
+    // ✔ Handle profile image
     let profileImagePath = user.profile_image;
+
     if (req.file) {
       profileImagePath = `/uploads/profiles/${req.file.filename}`;
     }
 
-    const updateQuery = `
+    // ✔ Update Query
+    await db.query(
+      `
       UPDATE user SET
-        firstname=?, lastname=?, birthday=?, gender=?, email=?,
-        student_id=?, department=?, year_level=?, course=?, phone=?,
+        firstname=?, lastname=?, birthday=?, gender=?, email=?, 
+        student_id=?, department=?, year_level=?, course=?, phone=?, 
         password=?, profile_image=?
       WHERE user_id=?
-    `;
-    const values = [
-      firstname || user.firstname,
-      lastname || user.lastname,
-      birthday || user.birthday,
-      gender || user.gender,
-      email || user.email,
-      student_id || user.student_id,
-      department || user.department,
-      year_level || user.year_level,
-      course || user.course,
-      phone || user.phone,
-      hashedPassword,
-      profileImagePath,
-      userId,
-    ];
+    `,
+      [
+        firstname || user.firstname,
+        lastname || user.lastname,
+        birthday || user.birthday,
+        gender || user.gender,
+        email || user.email,
+        student_id || user.student_id,
+        department || user.department,
+        year_level || user.year_level,
+        course || user.course,
+        phone || user.phone,
+        hashedPassword,
+        profileImagePath,
+        userId,
+      ]
+    );
 
-    await db.query(updateQuery, values);
-    res.json({ message: "Profile updated successfully", profile_image: profileImagePath });
+    res.json({
+      success: true,
+      message: "Profile updated successfully",
+      profile_image: profileImagePath,
+    });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Database error", err });
+    console.error("UPDATE PROFILE ERROR:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 };
+
 
 // Get all users
 export const getAllUsers = async (req, res) => {
@@ -197,3 +230,6 @@ export const approveOrganizer = async (req, res) => {
 
   res.json({ msg: "Organizer approved successfully!" });
 };
+
+
+

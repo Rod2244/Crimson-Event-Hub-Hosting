@@ -27,7 +27,7 @@ export default function HomePage() {
             View All Events
           </button>
         </div>
-        <Dashboard classname="mb-10"/>
+        <Dashboard className="mb-10"/>
       </main>
     </div>
   );

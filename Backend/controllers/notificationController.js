@@ -20,7 +20,11 @@ export const getUserNotifications = async (req, res) => {
         CASE 
           WHEN n.type = 'Event' THEN e.description
           WHEN n.type = 'Announcement' THEN a.description
-        END AS description
+        END AS description,
+        CASE 
+          WHEN n.type = 'Event' THEN e.remarks
+          WHEN n.type = 'Announcement' THEN a.remarks
+        END AS remarks
       FROM notification n
       LEFT JOIN event e ON n.item_id = e.event_id AND n.type = 'Event'
       LEFT JOIN announcement a ON n.item_id = a.announcement_id AND n.type = 'Announcement'
@@ -49,18 +53,28 @@ export const getNotificationDetails = async (req, res) => {
         n.item_id,
         n.type,
         n.status,
-        n.created_at,
+        DATE_FORMAT(n.created_at, '%b %d, %Y %h:%i %p') AS created_at,
+        
         CASE 
           WHEN n.type = 'Event' THEN e.title
           WHEN n.type = 'Announcement' THEN a.title
         END AS title,
+
         CASE 
           WHEN n.type = 'Event' THEN e.description
           WHEN n.type = 'Announcement' THEN a.description
-        END AS description
+        END AS description,
+
+        CASE 
+          WHEN n.type = 'Event' THEN e.remarks
+          WHEN n.type = 'Announcement' THEN a.remarks
+        END AS remarks
+
       FROM notification n
-      LEFT JOIN event e ON n.item_id = e.event_id AND n.type = 'Event'
-      LEFT JOIN announcement a ON n.item_id = a.announcement_id AND n.type = 'Announcement'
+      LEFT JOIN event e 
+        ON n.item_id = e.event_id AND n.type = 'Event'
+      LEFT JOIN announcement a 
+        ON n.item_id = a.announcement_id AND n.type = 'Announcement'
       WHERE n.notification_id = ?
     `;
 
@@ -96,3 +110,48 @@ export const deleteNotification = async (req, res) => {
   }
 };
 
+// Create notifications for students when a new approved item is added
+export const createNotificationForStudents = async (type, itemId, io = null) => {
+  try {
+    // Get all students (role_id = 1)
+    const [students] = await db.query(
+      "SELECT user_id FROM user WHERE role_id = 1"
+    );
+
+    if (!students.length) return;
+
+    // Insert notification for each student
+    const notificationValues = students.map((s) => [
+      s.user_id,
+      itemId,
+      type,
+      "unread", // status
+      new Date(), // created_at
+    ]);
+
+    const sql = `
+      INSERT INTO notification (user_id, item_id, type, status, created_at)
+      VALUES ?
+    `;
+
+    await db.query(sql, [notificationValues]);
+
+    console.log(`${students.length} notifications created for students`);
+
+    // --- EMIT REAL-TIME NOTIFICATIONS ---
+    if (io) {
+      students.forEach((student) => {
+        io.to(student.user_id.toString()).emit("newNotification", {
+          user_id: student.user_id,
+          item_id: itemId,
+          type,
+          status: "unread",
+          created_at: new Date(),
+        });
+      });
+    }
+
+  } catch (err) {
+    console.error("Error creating notifications for students:", err);
+  }
+};
