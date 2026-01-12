@@ -19,9 +19,6 @@ export default function HeaderControls ({ getMonthYear, previousMonth, nextMonth
           >
             <ChevronRight size={24} className="text-gray-700" />
           </button>
-          <button className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700 transition"> 
-            Today
-          </button>
         </div>
 
         
