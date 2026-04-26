@@ -46,7 +46,7 @@ export default function MonthView({
                       <div
                         key={event.event_id || event.id}
                         className={`text-xs p-2 rounded cursor-pointer hover:shadow-md transition font-semibold truncate ${
-                          event.category === "Academic"
+                          event.category_name === "Academic"
                             ? "bg-blue-100 text-blue-700"
                             : "bg-red-100 text-red-700"
                         }`}

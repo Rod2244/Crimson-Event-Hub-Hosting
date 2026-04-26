@@ -1,7 +1,8 @@
 import { UserRound, Mail, KeyRound, Phone, Building } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Button from "./Button";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 export default function SignupForm({ onFlip }) {
   const [form, setForm] = useState({
@@ -15,10 +16,74 @@ export default function SignupForm({ onFlip }) {
   });
 
   const [message, setMessage] = useState("");
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
+
+  // =========================================================
+  // 🔥 GOOGLE SIGNUP HANDLER (Callback function)
+  // =========================================================
+  const handleGoogleResponse = async (response) => {
+    try {
+      const { credential } = response; // Google's ID Token
+
+      // Make sure this matches your backend's port and path!
+      const res = await axios.post(
+        "http://localhost:5100/auth/google/signup",
+        { credential }
+      );
+
+      const { token, user } = res.data;
+
+      localStorage.setItem("token", token);
+      localStorage.setItem("role_id", user.role_id);
+
+      setMessage("Google signup successful! Redirecting...");
+
+      // 💡 Check role IDs and adjust navigation paths as necessary
+      if (user.role_id === 3) { 
+        navigate("/admin/dashboard");
+      } else if (user.role_id === 1) {
+        navigate("/homepage");
+      } else if (user.role_id === 2) {
+        navigate("/homepage"); // Or organizer dashboard if needed
+      }
+    } catch (err) {
+      console.error("Google Signup Error:", err.response?.data?.message || err);
+      // Display the specific error message from the backend (401, 409, 500)
+      setMessage(err.response?.data?.message || "Google signup failed.");
+    }
+  };
+
+  // =========================================================
+  // 🚀 INITIALIZE AND RENDER GOOGLE BUTTON (Runs once on mount)
+  // =========================================================
+  useEffect(() => {
+    /* global google */
+    if (window.google) {
+      // 1. Initialize the Google Identity Service
+      google.accounts.id.initialize({
+        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+        callback: handleGoogleResponse,
+      });
+
+      // 2. Render the Standard Button
+      google.accounts.id.renderButton(
+        document.getElementById("googleSignUpButton"), 
+        { 
+            theme: "outline", 
+            size: "large", 
+            type: "standard",
+            width: "360"
+        }
+      );
+    } else {
+        // Fallback for when the GIS script hasn't loaded
+        console.warn("Google Identity Services script not yet loaded.");
+    }
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -151,6 +216,11 @@ export default function SignupForm({ onFlip }) {
                        focus:outline-none focus:ring-2 focus:ring-[#C8102E]"
           />
         </div>
+      </div>
+
+      {/* 💡 GOOGLE SIGNUP BUTTON CONTAINER */}
+      <div id="googleSignUpButton" className="flex justify-center w-full mt-2">
+        {/* The Google button will be rendered inside this div */}
       </div>
 
       {/* Submit */}

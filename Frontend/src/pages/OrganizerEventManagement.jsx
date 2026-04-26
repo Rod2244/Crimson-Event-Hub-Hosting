@@ -50,7 +50,7 @@ const EventManagement = () => {
   // Filtered events based on search + category
   const filteredEvents = events.filter(event => {
     const search = searchTerm.toLowerCase();
-    const eventCategory = (event.category || '').toLowerCase();
+    const eventCategory = (event.category_name || event.category || '').toLowerCase();
 
     const matchesSearch =
       event.title?.toLowerCase().includes(search) ||

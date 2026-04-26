@@ -52,7 +52,7 @@ export default function LatestUpdates() {
   let filteredAnnouncements =
     activeCategory === "All"
       ? announcements
-      : announcements.filter((a) => a.category === activeCategory);
+      : announcements.filter((a) => a.category_name === activeCategory);
 
   if (sortStatus !== "All") {
     filteredAnnouncements = filteredAnnouncements.filter(
@@ -108,7 +108,7 @@ export default function LatestUpdates() {
               <AnnouncementCard
                 key={event.event_id}
                 id={event.event_id}
-                category={event.category}
+                category={event.category_name || event.category}
                 color={event.color || "bg-gray-300"}
                 title={event.title}
                 desc={event.description || "No description available"}

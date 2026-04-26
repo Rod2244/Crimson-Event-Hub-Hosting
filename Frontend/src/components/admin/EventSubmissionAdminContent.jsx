@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Send, UploadCloud, ArrowLeft, X, CheckCircle, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -31,10 +31,11 @@ const FeedbackMessage = ({ message, type, onClose }) => {
 export default function AdminEventSubmissionForm() {
     const navigate = useNavigate();
 
+
     const [formData, setFormData] = useState({
         title: "",
         description: "",
-        category: "",
+        category_id: "",
         organizer: "",
         eventDate: "",
         eventTime: "",
@@ -43,6 +44,24 @@ export default function AdminEventSubmissionForm() {
         targetAudience: "",
         number_of_registration: ""
     });
+
+    // Categories state
+    const [categories, setCategories] = useState([]);
+    // Fetch categories on mount
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const res = await fetch("http://localhost:5100/api/categories");
+                if (res.ok) {
+                    const data = await res.json();
+                    setCategories(data);
+                }
+            } catch (err) {
+                // Optionally handle error
+            }
+        };
+        fetchCategories();
+    }, []);
 
     const [showDropdown, setShowDropdown] = useState(false);
     const [feedbackMessage, setFeedbackMessage] = useState(null);
@@ -94,11 +113,12 @@ export default function AdminEventSubmissionForm() {
 
         try {
             // Validate required fields
-            const requiredFields = ["title", "description", "category"];
+
+            const requiredFields = ["title", "description", "category_id"];
             for (let field of requiredFields) {
-                if (!formData[field] || formData[field].trim() === "") {
+                if (!formData[field] || formData[field].toString().trim() === "") {
                     setFeedbackType("error");
-                    setFeedbackMessage(`Please fill in: ${field}`);
+                    setFeedbackMessage(`Please fill in: ${field === "category_id" ? "Category" : field}`);
                     setIsLoading(false);
                     return;
                 }
@@ -129,7 +149,7 @@ export default function AdminEventSubmissionForm() {
                 setFormData({
                     title: "",
                     description: "",
-                    category: "",
+                    category_id: "",
                     organizer: "",
                     eventDate: "",
                     eventTime: "",
@@ -220,15 +240,22 @@ export default function AdminEventSubmissionForm() {
                                 </div>
 
                                 <div>
-                                    <label className="text-sm font-semibold text-gray-600">Category *</label>
-                                    <input
-                                        type="text"
-                                        value={formData.category}
-                                        onChange={(e) => handleChange("category", e.target.value)}
-                                        className="w-full mt-1 px-4 py-2 rounded-lg border border-gray-300"
-                                        placeholder="Workshop, Seminar, etc."
-                                        disabled={isLoading}
-                                    />
+                                    <label className="text-sm font-semibold text-gray-600">
+                                        Category * {categories.length > 0 && <span className="text-xs text-gray-400">({categories.length} available)</span>}
+                                    </label>
+                                    <select
+                                        value={formData.category_id}
+                                        onChange={e => handleChange("category_id", e.target.value)}
+                                        className="w-full mt-1 px-4 py-2 rounded-lg border border-gray-300 bg-white"
+                                        disabled={isLoading || categories.length === 0}
+                                    >
+                                        <option value="">-- Select a Category --</option>
+                                        {categories.map(cat => (
+                                            <option key={cat.category_id} value={cat.category_id}>
+                                                {cat.category_name}
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
 
                                 <div>

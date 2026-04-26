@@ -6,6 +6,7 @@ import AboutEventCard from "../components/user/AbouteventCard";
 import EventDetailsSection from "../components/user/EventdetailSection";
 import AttachmentFile from "../components/organizer/AttachmentFile";
 import OrganizerSection from "../components/organizer/OrganizerSection";
+import CommentSection from "../components/user/CommentSection";
 import axios from "axios";
 
 export default function EventDetails() {
@@ -120,7 +121,7 @@ export default function EventDetails() {
         {/* Text on top of cover */}
         <div className="absolute bottom-6 left-6 text-white space-y-2">
           <span className="bg-red-600 px-3 py-1 text-xs font-semibold rounded-md uppercase">
-            {event.category}
+            {event.category_name}
           </span>
 
           <h1 className="text-3xl md:text-4xl font-bold drop-shadow-lg">
@@ -182,6 +183,9 @@ export default function EventDetails() {
 
           {/* Other Sections */}
           <AboutEventCard event={event} />
+
+          <CommentSection eventId={event.event_id} user={event.user} />
+
           <div className="mt-8">
             <EventDetailsSection event={event} />
           </div>

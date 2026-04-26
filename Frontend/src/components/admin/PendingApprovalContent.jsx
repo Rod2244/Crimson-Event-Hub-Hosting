@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Search, Eye, Download } from "lucide-react";
-import { fetchWithAuth } from "../../utils/fetchWithAuth"; // helper to include token in headers
+import { fetchWithAuth } from "../../utils/fetchWithAuth.js"; // helper to include token in headers
 
 // ----- Helper: Format date/time -----
 const formatDateTime = (date, time = null) => {
@@ -193,7 +193,7 @@ const PendingRow = ({ item, isHighlighted, onView }) => {
     >
       <div className="text-left truncate">{item.title}</div>
       <div className="text-center">{item.type}</div>
-      <div className="text-center truncate">{item.category}</div>
+      <div className="text-center truncate">{item.category_name || item.category}</div>
       <div className="text-center truncate">{item.organizer_name || item.author}</div>
       <div className="text-center">{createdDate}</div>
       <div className="text-center">

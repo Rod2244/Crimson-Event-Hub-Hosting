@@ -1,4 +1,4 @@
-import { Calendar, Clock, MapPin, Users } from "lucide-react";
+import { Calendar, Clock, MapPin, Users, Tag } from "lucide-react";
 
 // --- DATE FORMATTER ---
 const formatDate = (dateStr) => {
@@ -33,6 +33,19 @@ export default function EventDetailsSection({ event }) {
       <h2 className="text-lg font-semibold text-gray-800 mb-4">Event Details</h2>
 
       <ul className="divide-y divide-gray-200">
+        {/* CATEGORY */}
+        {(event.category_name || event.category) && (
+          <li className="flex items-start gap-3 py-3">
+            <div className="p-2 bg-gray-200 rounded-lg">
+              <Tag className="w-5 h-5 text-gray-600" />
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase text-gray-500">Category</p>
+              <p className="text-sm text-gray-800">{event.category_name || event.category}</p>
+            </div>
+          </li>
+        )}
+
         {/* DATE */}
         <li className="flex items-start gap-3 py-3">
           <div className="p-2 bg-gray-200 rounded-lg">

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Send, UploadCloud, ArrowLeft, X, CheckCircle, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -34,7 +34,7 @@ export default function OrganizerEventSubmissionForm() {
     const [formData, setFormData] = useState({
         title: "",
         description: "",
-        category: "",
+        category_id: "",
         organizer: "",
         eventDate: "",
         eventTime: "",
@@ -44,6 +44,7 @@ export default function OrganizerEventSubmissionForm() {
         number_of_registration: ""
     });
 
+    const [categories, setCategories] = useState([]);
     const [showDropdown, setShowDropdown] = useState(false);
     const [feedbackMessage, setFeedbackMessage] = useState(null);
     const [feedbackType, setFeedbackType] = useState("error");
@@ -52,6 +53,30 @@ export default function OrganizerEventSubmissionForm() {
     const [attachmentFile, setAttachmentFile] = useState(null);
     const [eventImageFile, setEventImageFile] = useState(null);
     const [showImageModal, setShowImageModal] = useState(false);
+
+    // =========================================================
+    // FETCH CATEGORIES ON MOUNT
+    // =========================================================
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                console.log("📡 Fetching categories from API...");
+                const res = await fetch("http://localhost:5100/api/categories");
+                console.log("📊 API Response Status:", res.status);
+                if (res.ok) {
+                    const data = await res.json();
+                    console.log("✅ Categories fetched successfully:", data);
+                    setCategories(data);
+                } else {
+                    console.error("❌ Failed to fetch categories. Status:", res.status);
+                }
+            } catch (err) {
+                console.error("❌ Error fetching categories:", err);
+            }
+        };
+
+        fetchCategories();
+    }, []);
 
     const audienceSuggestions = [
         "School-wide (All students and faculty)",
@@ -77,11 +102,12 @@ export default function OrganizerEventSubmissionForm() {
         setIsLoading(true);
 
         // Validate required fields
-        const requiredFields = ["title", "description", "category", "organizer", "eventDate", "eventTime", "location", "targetAudience"];
+        const requiredFields = ["title", "description", "category_id", "organizer", "eventDate", "eventTime", "location", "targetAudience"];
         for (let field of requiredFields) {
-            if (!formData[field]?.trim()) {
+            if (!formData[field]?.toString().trim()) {
                 setFeedbackType("error");
-                setFeedbackMessage(`Please fill in the required field: ${field.replace(/([A-Z])/g, " $1")}`);
+                const fieldName = field === "category_id" ? "Category" : field.replace(/([A-Z])/g, " $1");
+                setFeedbackMessage(`Please fill in the required field: ${fieldName}`);
                 setIsLoading(false);
                 return;
             }
@@ -110,7 +136,7 @@ export default function OrganizerEventSubmissionForm() {
                 setFeedbackMessage(`Event submitted successfully! Approval status: ${result.approval_status || 'pending'}. Redirecting...`);
                 // reset form
                 setFormData({
-                    title: "", description: "", category: "", organizer: "",
+                    title: "", description: "", category_id: "", organizer: "",
                     eventDate: "", eventTime: "", location: "", eventLink: "",
                     targetAudience: "", number_of_registration: ""
                 });
@@ -173,24 +199,72 @@ export default function OrganizerEventSubmissionForm() {
                         <div>
                             <h2 className="text-xl font-bold mb-4 text-gray-700 border-b pb-2">Basic Information</h2>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {[
-                                    { label: "Title *", field: "title", placeholder: "Event title" },
-                                    { label: "Category *", field: "category", placeholder: "Workshop, Seminar, etc." },
-                                    { label: "Organizer *", field: "organizer", placeholder: "Organizer name or department" },
-                                    { label: "Location *", field: "location", placeholder: "Physical venue or virtual link" }
-                                ].map(({ label, field, placeholder }) => (
-                                    <div key={field}>
-                                        <label className="text-sm font-semibold text-gray-600">{label}</label>
-                                        <input
-                                            type="text"
-                                            value={formData[field]}
-                                            onChange={(e) => handleChange(field, e.target.value)}
-                                            className="w-full mt-1 px-4 py-2 rounded-lg border border-gray-300"
-                                            placeholder={placeholder}
-                                            disabled={isLoading}
-                                        />
-                                    </div>
-                                ))}
+                                {/* Title */}
+                                <div>
+                                    <label className="text-sm font-semibold text-gray-600">Title *</label>
+                                    <input
+                                        type="text"
+                                        value={formData.title}
+                                        onChange={(e) => handleChange("title", e.target.value)}
+                                        className="w-full mt-1 px-4 py-2 rounded-lg border border-gray-300"
+                                        placeholder="Event title"
+                                        disabled={isLoading}
+                                    />
+                                </div>
+
+                                {/* Category Dropdown */}
+                                <div>
+                                    <label className="text-sm font-semibold text-gray-600">
+                                        Category * 
+                                        {categories.length > 0 && <span className="text-xs text-green-600 ml-2">({categories.length} available)</span>}
+                                    </label>
+                                    <select
+                                        value={formData.category_id}
+                                        onChange={(e) => {
+                                            console.log("Selected category:", e.target.value);
+                                            handleChange("category_id", e.target.value);
+                                        }}
+                                        className="w-full mt-1 px-4 py-2 rounded-lg border border-gray-300 bg-white"
+                                        disabled={isLoading || categories.length === 0}
+                                    >
+                                        <option value="">-- Select a Category --</option>
+                                        {categories && categories.length > 0 ? (
+                                            categories.map((cat) => (
+                                                <option key={cat.category_id} value={cat.category_id}>
+                                                    {cat.category_name}
+                                                </option>
+                                            ))
+                                        ) : (
+                                            <option disabled>Loading categories...</option>
+                                        )}
+                                    </select>
+                                </div>
+
+                                {/* Organizer */}
+                                <div>
+                                    <label className="text-sm font-semibold text-gray-600">Organizer *</label>
+                                    <input
+                                        type="text"
+                                        value={formData.organizer}
+                                        onChange={(e) => handleChange("organizer", e.target.value)}
+                                        className="w-full mt-1 px-4 py-2 rounded-lg border border-gray-300"
+                                        placeholder="Organizer name or department"
+                                        disabled={isLoading}
+                                    />
+                                </div>
+
+                                {/* Location */}
+                                <div>
+                                    <label className="text-sm font-semibold text-gray-600">Location *</label>
+                                    <input
+                                        type="text"
+                                        value={formData.location}
+                                        onChange={(e) => handleChange("location", e.target.value)}
+                                        className="w-full mt-1 px-4 py-2 rounded-lg border border-gray-300"
+                                        placeholder="Physical venue or virtual link"
+                                        disabled={isLoading}
+                                    />
+                                </div>
                             </div>
 
                             <div className="mt-6">

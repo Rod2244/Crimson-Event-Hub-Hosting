@@ -22,7 +22,7 @@ const EventTableRow = ({ event, onViewEvent }) => {
   return (
     <tr className="border-b hover:bg-red-50 transition-colors">
       <td className="p-4 font-medium">{event.title}</td>
-      <td className="p-4 text-gray-600 text-sm">{event.category}</td>
+      <td className="p-4 text-gray-600 text-sm">{event.category_name || event.category || "—"}</td>
       <td className="p-4 text-gray-600 text-sm">{event.organizer_name}</td>
 
       <td className="p-4 text-gray-600 text-sm hidden sm:table-cell">

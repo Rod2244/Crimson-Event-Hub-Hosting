@@ -89,7 +89,7 @@ const EventRow = ({ event, isHighlighted, onDelete }) => {
 
             <div className="col-span-1 ml-10 font-semibold text-gray-800">{event.title}</div>
 
-            <div className="col-span-1 ml-10 text-gray-600 text-xs">{event.category}</div>
+            <div className="col-span-1 ml-10 text-gray-600 text-xs">{event.category_name}</div>
 
             <div className="col-span-1 ml-10 text-gray-600 text-xs">{event.organizer_name}</div>
 
@@ -157,7 +157,7 @@ const EventManagementContent = () => {
 
         const matchesCategory =
             categoryFilter.toLowerCase() === 'all categories' ||
-            event.category?.toLowerCase() === categoryFilter.toLowerCase();
+            event.category_name?.toLowerCase() === categoryFilter.toLowerCase();
 
         return matchesSearch && matchesCategory;
     });

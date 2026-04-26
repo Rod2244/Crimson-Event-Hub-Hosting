@@ -118,7 +118,7 @@ const AnnouncementManagementContent = () => {
 
     // Category filter
     if (categoryFilter !== "All") {
-      filtered = filtered.filter((a) => a.category === categoryFilter);
+      filtered = filtered.filter((a) => a.category_name === categoryFilter);
     }
 
     setFilteredAnnouncements(filtered);

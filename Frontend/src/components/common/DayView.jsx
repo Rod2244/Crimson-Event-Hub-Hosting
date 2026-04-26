@@ -37,11 +37,11 @@ export default function DayView ({getEventsForDay, setSelectedEvent}) {
                                     <p className="text-gray-600 mt-4">{event.description}</p>
                                 </div>
                                 <span className={`px-4 py-2 rounded-full text-sm font-semibold ${
-                                    event.category === 'Academic'
+                                    event.category_name === 'Academic'
                                     ? 'bg-blue-100 text-blue-700'
                                     : 'bg-red-100 text-red-700'
                                 }`}>
-                                    {event.category}
+                                    {event.category_name}
 
                                 </span>
                             </div>

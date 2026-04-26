@@ -37,7 +37,7 @@ export const createEvent = async (req, res) => {
     const {
         title,
         description,
-        category,
+        category_id,
         organizer,
         eventDate,
         eventTime,
@@ -75,7 +75,7 @@ export const createEvent = async (req, res) => {
     // ----------------------------
     // Validate required fields
     // ----------------------------
-    if (!title || !description || !category || !organizer || !eventDate || !eventTime || !location || !targetAudience) {
+    if (!title || !description || !category_id || !organizer || !eventDate || !eventTime || !location || !targetAudience) {
         return res.status(400).json({ message: "Please fill in all required fields." });
     }
 
@@ -89,7 +89,7 @@ export const createEvent = async (req, res) => {
 
     const sqlEvent = `
         INSERT INTO event
-        (user_id, title, description, category, organizer_name, event_date, event_time, location, event_link, audience, number_of_registration, file_name, file_path, event_image, event_image_path, approval_status)
+        (user_id, title, description, category_id, organizer_name, event_date, event_time, location, event_link, audience, number_of_registration, file_name, file_path, event_image, event_image_path, approval_status)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
@@ -97,7 +97,7 @@ export const createEvent = async (req, res) => {
         userId,
         title,
         description,
-        category,
+        category_id,
         organizer,
         eventDate,
         formattedTime,
@@ -160,28 +160,34 @@ export const getAllEvents = async (req, res) => {
         if (roleId === 3) {
             // Admin: see all events that are approved
             query = `
-                SELECT event_id, title, description, event_date, event_time, category, organizer_name, approval_status AS status, created_at 
-                FROM event 
-                WHERE approval_status = 'approved' AND status != 'archived'
-                ORDER BY created_at DESC
+                SELECT e.event_id, e.title, e.description, e.event_date, e.event_time, 
+                       e.category_id, c.category_name, e.organizer_name, e.approval_status AS status, e.created_at 
+                FROM event e
+                LEFT JOIN category c ON e.category_id = c.category_id
+                WHERE e.approval_status = 'approved' AND e.status != 'archived'
+                ORDER BY e.created_at DESC
             `;
             params = [];
         } else if (roleId === 1) {
             // Role 1: also see all approved events
             query = `
-                SELECT event_id, title, description, location, event_date, event_time, category, organizer_name, approval_status, status, created_at 
-                FROM event 
-                WHERE approval_status = 'approved' AND status != 'archived'
-                ORDER BY created_at DESC
+                SELECT e.event_id, e.title, e.description, e.location, e.event_date, e.event_time, 
+                       e.category_id, c.category_name, e.organizer_name, e.approval_status, e.status, e.created_at 
+                FROM event e
+                LEFT JOIN category c ON e.category_id = c.category_id
+                WHERE e.approval_status = 'approved' AND e.status != 'archived'
+                ORDER BY e.created_at DESC
             `;
             params = [];
         } else if (roleId === 2) {
-            // Regular user: only their own events, approved/rejected
+            // Organizer: only their own events, approved/rejected
             query = `
-                SELECT event_id, title, description, event_date, event_time, category, organizer_name, approval_status AS status, created_at 
-                FROM event 
-                WHERE user_id = ? AND approval_status IN ('approved', 'rejected') AND status != 'archived'
-                ORDER BY created_at DESC
+                SELECT e.event_id, e.title, e.description, e.event_date, e.event_time, 
+                       e.category_id, c.category_name, e.organizer_name, e.approval_status AS status, e.created_at 
+                FROM event e
+                LEFT JOIN category c ON e.category_id = c.category_id
+                WHERE e.user_id = ? AND e.approval_status IN ('approved', 'rejected') AND e.status != 'archived'
+                ORDER BY e.created_at DESC
             `;
             params = [userId];
         }
@@ -234,7 +240,12 @@ export const getEventById = async (req, res) => {
     console.log('Requested eventId:', id);
 
     try {
-        const query = 'SELECT * FROM event WHERE event_id = ?';
+        const query = `
+            SELECT e.*, c.category_name 
+            FROM event e
+            LEFT JOIN category c ON e.category_id = c.category_id
+            WHERE e.event_id = ?
+        `;
         const [results] = await db.execute(query, [id]);
         console.log('Query results:', results);
 

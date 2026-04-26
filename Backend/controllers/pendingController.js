@@ -4,10 +4,25 @@ import db from "../database/database.js";
 export const getPendingItems = async (req, res) => {
   try {
     const eventsSql = `
-      SELECT event_id, title, category, organizer_name, created_at, 'Event' AS type,
-             location, event_date, event_time, audience, number_of_registration, event_link, description, event_image, approval_status AS status
-      FROM event
-      WHERE approval_status = 'Pending'
+      SELECT 
+        e.event_id,
+        e.title,
+        c.category_name AS category,
+        e.organizer_name,
+        e.created_at,
+        'Event' AS type,
+        e.location,
+        e.event_date,
+        e.event_time,
+        e.audience,
+        e.number_of_registration,
+        e.event_link,
+        e.description,
+        e.event_image,
+        e.approval_status AS status
+      FROM event e
+      JOIN category c ON e.category_id = c.category_id
+      WHERE e.approval_status = 'Pending'
     `;
 
     const announcementsSql = `
@@ -116,7 +131,7 @@ export const getUserPendingItems = async (req, res) => {
 
     // Fetch only pending events for this user
     const eventsSql = `
-      SELECT event_id AS id, title, category, organizer_name AS organizer, created_at AS createdAt,
+      SELECT event_id AS id, title, category_id, organizer_name AS organizer, created_at AS createdAt,
              'Event' AS type, location, event_date, event_time, audience, number_of_registration,
              event_link, description, event_image, approval_status AS status
       FROM event

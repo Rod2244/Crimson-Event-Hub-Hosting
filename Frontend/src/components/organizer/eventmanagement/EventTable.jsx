@@ -21,7 +21,7 @@ const EventTable = ({ events = [], onViewEvent }) => {
           {events.length > 0 ? (
             events.map((event) => (
               <EventTableRow
-                key={event.id}
+                key={event.event_id || event.id}
                 event={event}
                 onViewEvent={onViewEvent}
               />

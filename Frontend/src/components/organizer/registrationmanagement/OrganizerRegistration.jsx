@@ -49,7 +49,7 @@ const OrganizerRegistrationPage = () => {
 
   const filteredEvents = events.filter(
     e => e.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-         (e.category?.toLowerCase() || '').includes(searchTerm.toLowerCase())
+         (e.category_name?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -103,7 +103,7 @@ const OrganizerRegistrationPage = () => {
                 ) : filteredEvents.map(event => (
                   <tr key={event.event_id} className="hover:bg-red-50 cursor-pointer" onClick={() => handleSelectEvent(event)}>
                     <td className="p-4">{event.title}</td>
-                    <td className="p-4 hidden sm:table-cell">{event.category}</td>
+                    <td className="p-4 hidden sm:table-cell">{event.category_name}</td>
                     <td className="p-4 text-center"><Eye size={18} className="text-gray-400 hover:text-red-600 mx-auto"/></td>
                   </tr>
                 ))}

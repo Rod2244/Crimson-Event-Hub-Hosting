@@ -68,7 +68,7 @@ const ViewEventContent = () => {
 
                         {/* Category & Organizer */}
                         <div className="flex flex-wrap gap-4 text-gray-600">
-                            <span className="bg-gray-100 px-3 py-1 rounded-full font-medium">{event.category}</span>
+                            <span className="bg-gray-100 px-3 py-1 rounded-full font-medium">{event.category_name}</span>
                             <span className="bg-gray-100 px-3 py-1 rounded-full font-medium">Organizer: {event.organizer_name}</span>
                         </div>
 

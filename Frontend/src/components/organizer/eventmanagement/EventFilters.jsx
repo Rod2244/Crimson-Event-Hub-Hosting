@@ -1,15 +1,40 @@
-// components/EventFilters.jsx
-import React from "react";
-import { Search, ChevronDown } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Search } from "lucide-react";
+import { fetchWithAuth } from "../../../utils/fetchWithAuth.js";
 
-const EventFilters = ({ searchTerm, setSearchTerm, categoryFilter, setCategoryFilter }) => {
-  const categories = ["All", "Academic", "Non-Academic"];
+const EventFilters = ({
+  searchTerm,
+  setSearchTerm,
+  categoryFilter,
+  setCategoryFilter,
+}) => {
+  const [categories, setCategories] = useState([]);
+
+  // ✅ Fetch categories from backend
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetchWithAuth("http://localhost:5100/api/categories");
+        const data = await res.json();
+
+        // Your backend returns ARRAY directly
+        setCategories(data);
+      } catch (err) {
+        console.error("Failed to fetch categories:", err);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   return (
     <div className="flex flex-col md:flex-row gap-4 mb-6">
-      {/* Search Input */}
+      {/* 🔍 Search */}
       <div className="relative flex-grow">
-        <Search size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <Search
+          size={20}
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+        />
         <input
           type="text"
           placeholder="Search events or organizer..."
@@ -19,15 +44,22 @@ const EventFilters = ({ searchTerm, setSearchTerm, categoryFilter, setCategoryFi
         />
       </div>
 
-      {/* Category Dropdown */}
+      {/* 📂 Dynamic Category Dropdown */}
       <select
         value={categoryFilter}
         onChange={(e) => setCategoryFilter(e.target.value)}
-        className="flex-shrink-0 flex items-center bg-white border border-gray-300 px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700 text-sm font-medium appearance-none"
+        className="flex-shrink-0 bg-white border border-gray-300 px-4 py-3 rounded-xl text-gray-700 text-sm font-medium"
       >
+        {/* Default */}
+        <option value="all">All</option>
+
+        {/* From DB */}
         {categories.map((cat) => (
-          <option key={cat} value={cat.toLowerCase()}>
-            {cat}
+          <option
+            key={cat.category_id}
+            value={cat.category_name.toLowerCase()}
+          >
+            {cat.category_name}
           </option>
         ))}
       </select>
