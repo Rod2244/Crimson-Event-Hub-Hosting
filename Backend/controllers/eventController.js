@@ -39,12 +39,15 @@ export const createEvent = async (req, res) => {
         description,
         category_id,
         organizer,
-        eventDate,
-        eventTime,
+        startDate,
+        endDate,
+        startTime,
+        endTime,
         location,
         eventLink,
         targetAudience,
-        number_of_registration
+        number_of_registration,
+        allow_joining
     } = req.body;
 
     // ----------------------------
@@ -62,7 +65,8 @@ export const createEvent = async (req, res) => {
         return `${hours}:${minutes}:00`;
     }
 
-    const formattedTime = convertTo24Hour(eventTime);
+    const formattedStartTime = convertTo24Hour(startTime);
+    const formattedEndTime = convertTo24Hour(endTime);
 
     // ----------------------------
     // Handle files
@@ -75,7 +79,7 @@ export const createEvent = async (req, res) => {
     // ----------------------------
     // Validate required fields
     // ----------------------------
-    if (!title || !description || !category_id || !organizer || !eventDate || !eventTime || !location || !targetAudience) {
+    if (!title || !description || !category_id || !organizer || !startDate || !endDate || !startTime || !endTime || !location || !targetAudience) {
         return res.status(400).json({ message: "Please fill in all required fields." });
     }
 
@@ -89,8 +93,8 @@ export const createEvent = async (req, res) => {
 
     const sqlEvent = `
         INSERT INTO event
-        (user_id, title, description, category_id, organizer_name, event_date, event_time, location, event_link, audience, number_of_registration, file_name, file_path, event_image, event_image_path, approval_status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (user_id, title, description, category_id, organizer_name, event_date, event_time, end_date, end_time, location, event_link, audience, number_of_registration, file_name, file_path, event_image, event_image_path, approval_status, allow_joining)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const eventValues = [
@@ -99,8 +103,10 @@ export const createEvent = async (req, res) => {
         description,
         category_id,
         organizer,
-        eventDate,
-        formattedTime,
+        startDate,
+        formattedStartTime,
+        endDate,
+        formattedEndTime,
         location,
         eventLink || null,
         targetAudience,
@@ -109,7 +115,8 @@ export const createEvent = async (req, res) => {
         attachmentPath,
         eventImageFile,
         eventImagePath,
-        approvalStatus
+        approvalStatus,
+        allow_joining !== undefined ? (allow_joining === 'true' || allow_joining === true ? 1 : 0) : 1
     ];
 
     try {

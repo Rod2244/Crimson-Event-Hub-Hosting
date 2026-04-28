@@ -165,20 +165,34 @@ export default function EventDetails() {
             <div className="flex flex-wrap gap-3">
               <button
                 onClick={handleJoin}
-                disabled={joined || joining}
+                disabled={joined || joining || !event?.allow_joining}
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition
                   ${
-                    joined
+                    !event?.allow_joining
+                      ? "bg-gray-400 cursor-not-allowed text-gray-700"
+                      : joined
                       ? "bg-gray-400 cursor-not-allowed"
                       : "bg-red-600 hover:bg-red-700 text-white"
                   }`}
               >
                 <ArrowRight size={16} />{" "}
-                {joined ? "Joined" : joining ? "Joining..." : "Join Now"}
+                {!event?.allow_joining 
+                  ? "Joining Disabled" 
+                  : joined 
+                  ? "Joined" 
+                  : joining 
+                  ? "Joining..." 
+                  : "Join Now"}
               </button>
             </div>
 
             {message && <p className="mt-3 text-sm text-gray-800">{message}</p>}
+            
+            {!event?.allow_joining && (
+              <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-sm text-yellow-800"><strong>Note:</strong> Registration for this event is currently closed. Please try again later.</p>
+              </div>
+            )}
           </div>
 
           {/* Other Sections */}

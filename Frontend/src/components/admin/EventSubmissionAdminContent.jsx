@@ -37,12 +37,15 @@ export default function AdminEventSubmissionForm() {
         description: "",
         category_id: "",
         organizer: "",
-        eventDate: "",
-        eventTime: "",
+        startDate: "",
+        endDate: "",
+        startTime: "",
+        endTime: "",
         location: "",
         eventLink: "",
         targetAudience: "",
-        number_of_registration: ""
+        number_of_registration: "",
+        allow_joining: true
     });
 
     // Categories state
@@ -151,8 +154,10 @@ export default function AdminEventSubmissionForm() {
                     description: "",
                     category_id: "",
                     organizer: "",
-                    eventDate: "",
-                    eventTime: "",
+                    startDate: "",
+                    endDate: "",
+                    startTime: "",
+                    endTime: "",
                     location: "",
                     eventLink: "",
                     targetAudience: "",
@@ -299,47 +304,74 @@ export default function AdminEventSubmissionForm() {
                         {/* --- EVENT DETAILS --- */}
                         <div>
                             <h2 className="text-xl font-bold mb-4 text-gray-700 border-b pb-2">Timing and Access</h2>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                {/* Start Date */}
                                 <div>
-                                    <label className="text-sm font-semibold text-gray-600">Event Date *</label>
+                                    <label className="text-sm font-semibold text-gray-600">Start Date *</label>
                                     <input
                                         type="date"
-                                        value={formData.eventDate}
-                                        onChange={(e) => handleChange("eventDate", e.target.value)}
+                                        value={formData.startDate}
+                                        onChange={(e) => handleChange("startDate", e.target.value)}
                                         className="w-full mt-1 px-4 py-2 rounded-lg border border-gray-300"
                                         disabled={isLoading}
                                     />
                                 </div>
 
+                                {/* End Date */}
                                 <div>
-                                    <label className="text-sm font-semibold text-gray-600">Event Time *</label>
+                                    <label className="text-sm font-semibold text-gray-600">End Date *</label>
+                                    <input
+                                        type="date"
+                                        value={formData.endDate}
+                                        onChange={(e) => handleChange("endDate", e.target.value)}
+                                        className="w-full mt-1 px-4 py-2 rounded-lg border border-gray-300"
+                                        disabled={isLoading}
+                                    />
+                                </div>
+
+                                {/* Start Time */}
+                                <div>
+                                    <label className="text-sm font-semibold text-gray-600">Start Time *</label>
                                     <input
                                         type="time"
-                                        value={formData.eventTime}
-                                        onChange={(e) => handleChange("eventTime", e.target.value)}
+                                        value={formData.startTime}
+                                        onChange={(e) => handleChange("startTime", e.target.value)}
                                         className="w-full mt-1 px-4 py-2 rounded-lg border border-gray-300"
                                         disabled={isLoading}
                                     />
                                 </div>
 
+                                {/* End Time */}
                                 <div>
-                                    <label className="text-sm font-semibold text-gray-600">Event Link (optional)</label>
+                                    <label className="text-sm font-semibold text-gray-600">End Time *</label>
                                     <input
-                                        type="url"
-                                        value={formData.eventLink}
-                                        onChange={(e) => handleChange("eventLink", e.target.value)}
+                                        type="time"
+                                        value={formData.endTime}
+                                        onChange={(e) => handleChange("endTime", e.target.value)}
                                         className="w-full mt-1 px-4 py-2 rounded-lg border border-gray-300"
-                                        placeholder="Zoom/Meet/Registration URL"
                                         disabled={isLoading}
                                     />
                                 </div>
+                            </div>
+
+                            {/* Event Link (optional) */}
+                            <div>
+                                <label className="text-sm font-semibold text-gray-600">Event Link (optional)</label>
+                                <input
+                                    type="url"
+                                    value={formData.eventLink}
+                                    onChange={(e) => handleChange("eventLink", e.target.value)}
+                                    className="w-full mt-1 px-4 py-2 rounded-lg border border-gray-300"
+                                    placeholder="Zoom/Meet/Registration URL"
+                                    disabled={isLoading}
+                                />
                             </div>
                         </div>
 
                         {/* --- AUDIENCE --- */}
                         <div>
                             <h2 className="text-xl font-bold mb-4 text-gray-700 border-b pb-2">Audience and Capacity</h2>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                                 <div>
                                     <label className="text-sm font-semibold text-gray-600">Target Audience *</label>
                                     <div className="relative">
@@ -388,8 +420,23 @@ export default function AdminEventSubmissionForm() {
                                         onChange={(e) => handleChange("number_of_registration", e.target.value)}
                                         className="w-full mt-1 px-4 py-2 rounded-lg border border-gray-300"
                                         placeholder="e.g., 50"
-                                        disabled={isLoading}
+                                        disabled={!formData.allow_joining || isLoading}
                                     />
+                                </div>
+                            </div>
+
+                            {/* --- Allow Joining Toggle --- */}
+                            <div className="flex items-center gap-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                <input
+                                    type="checkbox"
+                                    checked={formData.allow_joining}
+                                    onChange={(e) => handleChange("allow_joining", e.target.checked)}
+                                    className="w-5 h-5 cursor-pointer accent-red-600"
+                                    disabled={isLoading}
+                                />
+                                <div>
+                                    <label className="text-sm font-semibold text-gray-700 cursor-pointer">Allow Users to Join This Event</label>
+                                    <p className="text-xs text-gray-600 mt-1">When enabled, users will see the "Join Now" button. Disable this to close registrations.</p>
                                 </div>
                             </div>
                         </div>

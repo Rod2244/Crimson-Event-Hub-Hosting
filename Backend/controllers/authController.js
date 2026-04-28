@@ -145,4 +145,114 @@ export const login = async (req, res) => {
   }
 };
 
+// Forgot Password
+export const forgotPassword = async (req, res) => {
+  const { email } = req.body;
 
+  if (!email) {
+    return res.status(400).json({ msg: "Email is required" });
+  }
+
+  try {
+    // Check if user exists
+    const [results] = await db.query("SELECT * FROM user WHERE email = ?", [email]);
+    if (results.length === 0) {
+      return res.status(400).json({ msg: "Email not found in our system" });
+    }
+
+    const user = results[0];
+
+    // Generate a reset token that expires in 1 hour
+    const resetToken = jwt.sign(
+      { id: user.user_id, email: user.email },
+      process.env.JWT_SECRET + "RESET",
+      { expiresIn: "1h" }
+    );
+
+    // Create reset link
+    const resetLink = `http://localhost:5173/reset-password?token=${resetToken}`;
+
+    // Send email with reset link
+    try {
+      await sendEmail(
+        email,
+        "Password Reset Request",
+        `<h2>Password Reset Request</h2>
+         <p>Hi ${user.firstname},</p>
+         <p>We received a request to reset your password. Click the link below to proceed:</p>
+         <p><a href="${resetLink}" style="background-color: #C8102E; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Reset Password</a></p>
+         <p>This link will expire in 1 hour.</p>
+         <p>If you didn't request this, you can safely ignore this email.</p>`
+      );
+
+      return res.json({ msg: "Password reset link has been sent to your email" });
+    } catch (emailErr) {
+      console.error("Email sending error:", emailErr);
+      return res.status(500).json({ msg: "Failed to send reset email" });
+    }
+  } catch (err) {
+    console.error("Forgot password error:", err);
+    res.status(500).json({ msg: "Server error" });
+  }
+};
+
+// Reset Password
+export const resetPassword = async (req, res) => {
+  const { token, password } = req.body;
+
+  if (!token || !password) {
+    return res.status(400).json({ msg: "Token and password are required" });
+  }
+
+  if (password.length < 6) {
+    return res.status(400).json({ msg: "Password must be at least 6 characters" });
+  }
+
+  try {
+    // Verify the reset token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET + "RESET");
+    const userId = decoded.id;
+
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Update password in database
+    await db.query(
+      "UPDATE user SET password = ? WHERE user_id = ?",
+      [hashedPassword, userId]
+    );
+
+    // Send confirmation email
+    try {
+      const [userResult] = await db.query(
+        "SELECT email, firstname FROM user WHERE user_id = ?",
+        [userId]
+      );
+
+      if (userResult.length > 0) {
+        await sendEmail(
+          userResult[0].email,
+          "Password Reset Successful",
+          `<h2>Password Reset Confirmation</h2>
+           <p>Hi ${userResult[0].firstname},</p>
+           <p>Your password has been successfully reset.</p>
+           <p>If you didn't request this change, please contact support immediately.</p>`
+        );
+      }
+    } catch (emailErr) {
+      console.error("Confirmation email error:", emailErr);
+      // Don't fail the password reset if email fails
+    }
+
+    return res.json({ msg: "Password reset successfully" });
+  } catch (err) {
+    if (err.name === "TokenExpiredError") {
+      return res.status(400).json({ msg: "Reset link has expired" });
+    }
+    if (err.name === "JsonWebTokenError") {
+      return res.status(400).json({ msg: "Invalid reset link" });
+    }
+    console.error("Reset password error:", err);
+    res.status(500).json({ msg: "Server error" });
+  }
+};

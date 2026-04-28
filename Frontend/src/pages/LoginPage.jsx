@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { Mail, X } from "lucide-react";
+import axios from "axios";
 import AuthCard from "../components/common/AuthCard";
 import LoginForm from "../components/common/LoginForm";
 import SignupForm from "../components/common/SignupForm";
@@ -11,12 +13,49 @@ export default function LoginPage() {
 
   const [isFlipped, setIsFlipped] = useState(location.pathname === "/signup");
   const [isLoading, setIsLoading] = useState(false);
+  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotMessage, setForgotMessage] = useState("");
+  const [isSubmittingForgot, setIsSubmittingForgot] = useState(false);
 
   useEffect(() => {
     if (location.pathname === "/signup") setIsFlipped(true);
     else setIsFlipped(false);
   }, [location.pathname]);
 
+  // =========================================================
+  // 🔑 FORGOT PASSWORD HANDLER
+  // =========================================================
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    setForgotMessage("");
+    setIsSubmittingForgot(true);
+
+    try {
+      const res = await axios.post(
+        "http://localhost:5100/api/auth/forgot-password",
+        { email: forgotEmail }
+      );
+      setForgotMessage(res.data.msg || "Password reset link sent to your email!");
+      setForgotEmail("");
+      setTimeout(() => {
+        setIsForgotPasswordOpen(false);
+        setForgotMessage("");
+      }, 2000);
+    } catch (err) {
+      setForgotMessage(
+        err.response?.data?.msg || "Failed to send reset link. Try again."
+      );
+    } finally {
+      setIsSubmittingForgot(false);
+    }
+  };
+
+  const closeForgotPasswordModal = () => {
+    setIsForgotPasswordOpen(false);
+    setForgotMessage("");
+    setForgotEmail("");
+  };
   
   const handleFlip = (path) => {
     setIsFlipped(path === "/signup");
@@ -51,6 +90,7 @@ export default function LoginPage() {
                 <LoginForm
                   onFlip={() => handleFlip("/signup")}
                   setIsLoading={setIsLoading}
+                  onForgotPasswordClick={() => setIsForgotPasswordOpen(true)}
                   onLoginSuccess={(role_id) => {
                     switch (role_id) {
                       case 1: // user
@@ -111,6 +151,73 @@ export default function LoginPage() {
           )}
         </div>
       </div>
+
+      {/* FORGOT PASSWORD MODAL - Rendered at page level */}
+      {isForgotPasswordOpen && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[9999]">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
+            {/* Header */}
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Forgot Password?</h2>
+              <button
+                onClick={closeForgotPasswordModal}
+                className="text-gray-400 hover:text-gray-600 transition"
+              >
+                <X size={28} />
+              </button>
+            </div>
+
+            {/* Description */}
+            <p className="text-gray-600 text-sm mb-6 leading-relaxed">
+              Enter your email address and we'll send you a link to reset your password.
+            </p>
+
+            {/* Form */}
+            <form onSubmit={handleForgotPassword} className="space-y-4">
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 text-gray-400" size={20} />
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  value={forgotEmail}
+                  onChange={(e) => setForgotEmail(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:border-[#C8102E] focus:ring-2 focus:ring-[#C8102E]/20 transition"
+                  required
+                />
+              </div>
+
+              {/* Send Button */}
+              <button
+                type="submit"
+                disabled={isSubmittingForgot}
+                className="w-full bg-[#C8102E] text-white py-3 rounded-lg font-semibold hover:bg-[#a00e25] disabled:bg-gray-400 transition duration-200"
+              >
+                {isSubmittingForgot ? "Sending..." : "Send Reset Link"}
+              </button>
+
+              {/* Message */}
+              {forgotMessage && (
+                <p
+                  className={`text-sm text-center font-medium ${
+                    forgotMessage.includes("sent") ? "text-green-600" : "text-red-600"
+                  }`}
+                >
+                  {forgotMessage}
+                </p>
+              )}
+            </form>
+
+            {/* Cancel Button */}
+            <button
+              type="button"
+              onClick={closeForgotPasswordModal}
+              className="w-full mt-3 text-gray-700 font-medium py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

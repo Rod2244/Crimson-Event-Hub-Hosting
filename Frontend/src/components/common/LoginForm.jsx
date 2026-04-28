@@ -5,7 +5,7 @@ import { FcGoogle } from "react-icons/fc";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
-export default function LoginForm({ onFlip, setIsLoading, onLoginSuccess }) {
+export default function LoginForm({ onFlip, setIsLoading, onLoginSuccess, onForgotPasswordClick }) {
   const [form, setForm] = useState({ email: "", password: "" });
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ export default function LoginForm({ onFlip, setIsLoading, onLoginSuccess }) {
     setForm({ ...form, [e.target.name]: e.target.value });
 
   // =========================================================
-  // 🔥 GOOGLE LOGIN HANDLER (Callback function)
+  //  GOOGLE LOGIN HANDLER (Callback function)
   // =========================================================
   const handleGoogleResponse = async (response) => {
     try {
@@ -121,7 +121,7 @@ export default function LoginForm({ onFlip, setIsLoading, onLoginSuccess }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
-      {/* ... (EMAIL & PASSWORD INPUTS remain the same) ... */}
+      {/* ... (EMAIL & PASSWORD INPUTS) ... */}
       <div className="relative">
         <Mail className="absolute left-3 top-3 text-gray-500" size={20} />
         <input
@@ -146,8 +146,18 @@ export default function LoginForm({ onFlip, setIsLoading, onLoginSuccess }) {
         />
       </div>
 
+      {/* Forgot Password Link */}
+      <div className="text-right">
+        <button
+          type="button"
+          onClick={onForgotPasswordClick}
+          className="text-sm text-[#C8102E] hover:underline font-semibold"
+        >
+          Forgot Password?
+        </button>
+      </div>
+
       {/* 💡 GOOGLE LOGIN BUTTON CONTAINER */}
-      {/* This element is now empty. The GIS library will automatically inject the button here when the component mounts. */}
       <div id="googleSignInButton" className="flex justify-center w-full mt-2">
         {/* The Google button will be rendered inside this div */}
       </div>
