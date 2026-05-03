@@ -105,14 +105,14 @@ const ViewEventContent = () => {
                                             <Calendar size={18} className="text-red-600" />
                                             Event Date
                                         </td>
-                                        <td className="py-4 px-4 text-gray-700">{new Date(event.event_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</td>
+                                        <td className="py-4 px-4 text-gray-700">{new Date(event.start_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} - {new Date(event.end_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</td>
                                     </tr>
                                     <tr className="border-b border-gray-200 hover:bg-gray-50">
                                         <td className="py-4 px-4 font-semibold text-gray-700 bg-gray-50 flex items-center gap-2">
                                             <Clock size={18} className="text-red-600" />
                                             Event Time
                                         </td>
-                                        <td className="py-4 px-4 text-gray-700">{event.event_time || 'N/A'}</td>
+                                        <td className="py-4 px-4 text-gray-700">{event.start_time || 'N/A'} - {event.end_time || 'N/A'}</td>
                                     </tr>
                                     <tr className="border-b border-gray-200 hover:bg-gray-50">
                                         <td className="py-4 px-4 font-semibold text-gray-700 bg-gray-50 flex items-center gap-2">

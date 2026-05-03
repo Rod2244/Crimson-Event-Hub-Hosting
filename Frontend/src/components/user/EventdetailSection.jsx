@@ -54,7 +54,7 @@ export default function EventDetailsSection({ event }) {
           <div>
             <p className="text-xs font-semibold uppercase text-gray-500">Date</p>
             <p className="text-sm text-gray-800">
-              {formatDate(event.event_date)}
+              {formatDate(event.start_date)} - {formatDate(event.end_date)}
             </p>
           </div>
         </li>
@@ -67,7 +67,7 @@ export default function EventDetailsSection({ event }) {
           <div>
             <p className="text-xs font-semibold uppercase text-gray-500">Time</p>
             <p className="text-sm text-gray-800">
-              {formatTime(event.event_time)}
+              {formatTime(event.start_time)} - {formatTime(event.end_time)}
             </p>
           </div>
         </li>
