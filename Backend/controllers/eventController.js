@@ -93,8 +93,8 @@ export const createEvent = async (req, res) => {
 
     const sqlEvent = `
         INSERT INTO event
-        (user_id, title, description, category_id, organizer_name, event_date, event_time, end_date, end_time, location, event_link, audience, number_of_registration, file_name, file_path, event_image, event_image_path, approval_status, allow_joining)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (user_id, title, description, category_id, organizer_name, event_date, event_time, end_date, end_time, location, event_link, audience, number_of_registration, file_name, file_path, event_image, event_image_path, approval_status, allow_joining, start_date, start_time)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const eventValues = [
@@ -116,7 +116,9 @@ export const createEvent = async (req, res) => {
         eventImageFile,
         eventImagePath,
         approvalStatus,
-        allow_joining !== undefined ? (allow_joining === 'true' || allow_joining === true ? 1 : 0) : 1
+        allow_joining !== undefined ? (allow_joining === 'true' || allow_joining === true ? 1 : 0) : 1,
+        startDate,
+        formattedStartTime
     ];
 
     try {
@@ -167,7 +169,7 @@ export const getAllEvents = async (req, res) => {
         if (roleId === 3) {
             // Admin: see all events that are approved
             query = `
-                SELECT e.event_id, e.title, e.description, e.event_date, e.event_time, 
+                SELECT e.event_id, e.title, e.description, e.event_date, e.event_time, e.start_date, e.start_time, e.end_date, e.end_time,
                        e.category_id, c.category_name, e.organizer_name, e.approval_status AS status, e.created_at 
                 FROM event e
                 LEFT JOIN category c ON e.category_id = c.category_id
@@ -178,7 +180,7 @@ export const getAllEvents = async (req, res) => {
         } else if (roleId === 1) {
             // Role 1: also see all approved events
             query = `
-                SELECT e.event_id, e.title, e.description, e.location, e.event_date, e.event_time, 
+                SELECT e.event_id, e.title, e.description, e.location, e.event_date, e.event_time, e.start_date, e.start_time, e.end_date, e.end_time,
                        e.category_id, c.category_name, e.organizer_name, e.approval_status, e.status, e.created_at 
                 FROM event e
                 LEFT JOIN category c ON e.category_id = c.category_id
@@ -189,7 +191,7 @@ export const getAllEvents = async (req, res) => {
         } else if (roleId === 2) {
             // Organizer: only their own events, approved/rejected
             query = `
-                SELECT e.event_id, e.title, e.description, e.event_date, e.event_time, 
+                SELECT e.event_id, e.title, e.description, e.event_date, e.event_time, e.start_date, e.start_time, e.end_date, e.end_time,
                        e.category_id, c.category_name, e.organizer_name, e.approval_status AS status, e.created_at 
                 FROM event e
                 LEFT JOIN category c ON e.category_id = c.category_id

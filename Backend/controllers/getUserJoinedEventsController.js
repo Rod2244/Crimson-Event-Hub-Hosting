@@ -9,7 +9,7 @@ export const getUserJoinedEvents = async (req, res) => {
     const userId = req.user.id;
 
     const [events] = await db.query(
-      `SELECT e.event_id, e.title, e.event_date AS date, e.description
+      `SELECT e.event_id, e.title, e.event_date AS date, e.event_time, e.start_date, e.start_time, e.end_date, e.end_time, e.description
        FROM event_attendees ea
        JOIN event e ON ea.event_id = e.event_id
        WHERE ea.user_id = ?`,
@@ -28,7 +28,7 @@ export const getOrganizerEvents = async (req, res) => {
   try {
     const organizerId = req.user.id; // from JWT
     const [events] = await db.query(
-      `SELECT e.event_id, e.title, e.event_date AS date, e.category
+      `SELECT e.event_id, e.title, e.event_date AS date, e.event_time, e.start_date, e.start_time, e.end_date, e.end_time, e.category
        FROM event e
        WHERE e.user_id = ? AND e.approval_status = 'approved' AND e.status != 'archived'`,
       [organizerId]

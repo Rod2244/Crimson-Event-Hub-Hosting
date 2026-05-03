@@ -92,8 +92,12 @@ function ViewModal({ item, onClose, onApprove, onReject }) {
                 <p><span className="font-semibold">Organizer:</span> {item.organizer_name}</p>
                 <p><span className="font-semibold">Location:</span> {item.location || "TBA"}</p>
                 <p>
-                  <span className="font-semibold">Date & Time:</span>{" "}
-                  {formatDateTime(item.event_date, item.event_time)}
+                  <span className="font-semibold">Start Date & Time:</span>{" "}
+                  {formatDateTime(item.start_date, item.start_time)}
+                </p>
+                <p>
+                  <span className="font-semibold">End Date & Time:</span>{" "}
+                  {formatDateTime(item.end_date, item.end_time)}
                 </p>
                 <p><span className="font-semibold">Target Audience:</span> {item.audience || "All"}</p>
                 <p><span className="font-semibold">Max Registration:</span> {item.number_of_registration || "Unlimited"}</p>

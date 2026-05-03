@@ -1,4 +1,4 @@
-import { Mail, KeyRound } from "lucide-react";
+import { Mail, KeyRound, Eye, EyeOff } from "lucide-react";
 import { useState, useEffect } from "react"; // 💡 Import useEffect
 import Button from "./Button";
 import { FcGoogle } from "react-icons/fc";
@@ -8,6 +8,7 @@ import axios from "axios";
 export default function LoginForm({ onFlip, setIsLoading, onLoginSuccess, onForgotPasswordClick }) {
   const [form, setForm] = useState({ email: "", password: "" });
   const [message, setMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) =>
@@ -137,13 +138,20 @@ export default function LoginForm({ onFlip, setIsLoading, onLoginSuccess, onForg
       <div className="relative">
         <KeyRound className="absolute left-3 top-3 text-gray-500" size={20} />
         <input
-          type="password"
+          type={showPassword ? "text" : "password"}
           name="password"
           placeholder="Password"
           onChange={handleChange}
-          className="w-full pl-10 pr-3 py-2 rounded-lg border border-gray-300"
+          className="w-full pl-10 pr-10 py-2 rounded-lg border border-gray-300"
           required
         />
+        <button
+          type="button"
+          onClick={() => setShowPassword(!showPassword)}
+          className="absolute right-3 top-3 text-gray-500 hover:text-gray-700 transition"
+        >
+          {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+        </button>
       </div>
 
       {/* Forgot Password Link */}

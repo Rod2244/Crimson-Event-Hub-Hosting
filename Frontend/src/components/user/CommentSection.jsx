@@ -94,7 +94,7 @@ export default function CommentSection({ eventId, user }) {
 
         {rootComments.map((comment) => (
           <div key={comment.id} className="border rounded-lg p-4">
-            <p className="font-semibold">{comment.user_name}</p>
+            <p className="font-semibold">{comment.name}</p>
             <p className="text-gray-700 mt-1">{comment.content}</p>
 
             <button
@@ -112,7 +112,7 @@ export default function CommentSection({ eventId, user }) {
                   className="bg-gray-100 p-3 rounded-lg"
                 >
                   <p className="font-semibold text-sm">
-                    {reply.user_name}
+                    {reply.name}
                   </p>
                   <p className="text-sm text-gray-700">
                     {reply.content}

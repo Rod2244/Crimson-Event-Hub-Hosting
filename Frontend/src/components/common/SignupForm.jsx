@@ -1,4 +1,4 @@
-import { UserRound, Mail, KeyRound, Phone, Building } from "lucide-react";
+import { UserRound, Mail, KeyRound, Phone, Building, Eye, EyeOff } from "lucide-react";
 import { useState, useEffect } from "react";
 import Button from "./Button";
 import axios from "axios";
@@ -16,6 +16,7 @@ export default function SignupForm({ onFlip }) {
   });
 
   const [message, setMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -207,14 +208,21 @@ export default function SignupForm({ onFlip }) {
         <div className="relative col-span-2">
           <KeyRound className="absolute left-3 top-3 text-gray-500" size={20} />
           <input
-            type="password"
+            type={showPassword ? "text" : "password"}
             name="password"
             placeholder="Password"
             value={form.password}
             onChange={handleChange}
-            className="w-full pl-10 pr-3 py-2 rounded-lg border border-gray-300
+            className="w-full pl-10 pr-10 py-2 rounded-lg border border-gray-300
                        focus:outline-none focus:ring-2 focus:ring-[#C8102E]"
           />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-3 text-gray-500 hover:text-gray-700 transition"
+          >
+            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+          </button>
         </div>
       </div>
 

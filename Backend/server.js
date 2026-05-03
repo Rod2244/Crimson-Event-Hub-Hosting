@@ -20,6 +20,7 @@ import rejectedRouter from "./routes/rejected.js";
 import notificationRouter from "./routes/notification.js";
 import archiveRouter from "./routes/archive.js";
 import categoryRoutes from "./routes/category.js";
+import commentsRouter from "./routes/comments.js";
 import { googleSignup } from "./auth/googleAuth.js";
 
 const app = express();
@@ -53,6 +54,7 @@ app.use("/api/rejected", rejectedRouter);
 app.use("/api/notifications", notificationRouter);
 app.use("/api/archived", archiveRouter);
 app.use("/api/categories", categoryRoutes);
+app.use("/api/comments", commentsRouter);
 app.use("/api", dashboardCountRoutes);
 app.post("/auth/google/signup", googleSignup);
 

@@ -187,9 +187,9 @@ const EventDetailModal = ({ eventId, onClose }) => {
               {rootComments.map(comment => (
                 <div key={comment.id} className="border rounded-lg p-4">
                   <p className="font-semibold">
-                    {comment.user_name}
+                    {comment.name}
                     <span className="text-xs text-gray-500 ml-2">
-                      ({comment.role})
+                      ({comment.role_name})
                     </span>
                   </p>
                   <p className="text-gray-700 mt-1">{comment.content}</p>
@@ -241,7 +241,7 @@ const EventDetailModal = ({ eventId, onClose }) => {
                         className="bg-gray-100 p-3 rounded-lg"
                       >
                         <p className="text-sm font-semibold">
-                          {reply.user_name} ({reply.role})
+                          {reply.name} ({reply.role_name})
                         </p>
                         <p className="text-sm text-gray-700">
                           {reply.content}
