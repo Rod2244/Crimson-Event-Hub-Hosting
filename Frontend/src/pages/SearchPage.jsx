@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Navbar from "../components/common/Navbar";
 import FiltersSidebar from "../components/common/FiltersSidebar";
 import { useNavigate } from "react-router-dom";
+import { useError } from "../context/ErrorContext";
 
 // --------------------------------------------------
 // DATE FORMATTER
@@ -77,7 +78,7 @@ export default function SearchPage() {
         setItems(merged);
         setFilteredItems(merged);
       } catch (err) {
-        console.error("Error loading items:", err);
+        showError("Failed to load events and announcements");
       }
     };
 

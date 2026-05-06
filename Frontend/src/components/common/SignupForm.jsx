@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import Button from "./Button";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { useError } from "../../context/ErrorContext";
 
 export default function SignupForm({ onFlip }) {
   const [form, setForm] = useState({
@@ -18,6 +19,7 @@ export default function SignupForm({ onFlip }) {
   const [message, setMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const { showError } = useError();
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -52,9 +54,7 @@ export default function SignupForm({ onFlip }) {
         navigate("/homepage"); // Or organizer dashboard if needed
       }
     } catch (err) {
-      console.error("Google Signup Error:", err.response?.data?.message || err);
-      // Display the specific error message from the backend (401, 409, 500)
-      setMessage(err.response?.data?.message || "Google signup failed.");
+      showError(err.response?.data?.message || "Google signup failed");
     }
   };
 

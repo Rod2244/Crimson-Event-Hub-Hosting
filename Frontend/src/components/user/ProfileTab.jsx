@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { useError } from "../../context/ErrorContext";
 
 export default function ProfileTab() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const { showError } = useError();
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -33,12 +35,11 @@ export default function ProfileTab() {
 
         if (err.response) {
           if (err.response.status === 401) {
-            console.warn("Unauthorized! Redirecting to login...");
-            setError("Session expired or invalid token.");
-            localStorage.removeItem("token"); // clear invalid token
+            showError("Session expired. Please log in again.");
+            localStorage.removeItem("token");
             navigate("/login");
           } else if (err.response.status === 404) {
-            setError("User not found.");
+            showError("User not found.");
           } else {
             setError("An error occurred while fetching your data.");
           }

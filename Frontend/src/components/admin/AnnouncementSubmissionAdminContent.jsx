@@ -1,11 +1,15 @@
 import React, { useState } from "react";
 import { Send, UploadCloud, ArrowLeft, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useError } from "../../context/ErrorContext";
+import ConfirmationModal from "../common/ConfirmationModal";
+import SuccessModal from "../common/SuccessModal";
 
 const CATEGORIES = ["General", "Event", "Memo", "Reminder", "Urgent"];
 
 export default function AdminAnnouncementSubmissionForm() {
   const navigate = useNavigate();
+  const { showError } = useError();
 
   const [formData, setFormData] = useState({
     title: "",
@@ -16,6 +20,8 @@ export default function AdminAnnouncementSubmissionForm() {
 
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState({ show: false, message: "", type: "" });
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const showToast = (msg, type = "success") => {
     setToast({ show: true, message: msg, type });
@@ -36,50 +42,62 @@ export default function AdminAnnouncementSubmissionForm() {
     const required = ["title", "description", "category"];
     for (let f of required) {
       if (!formData[f]?.trim()) {
-        showToast(`Please fill in: ${f}`, "error");
+        showError(`Please fill in: ${f}`);
         return;
       }
     }
 
-    const form = new FormData();
-    form.append("title", formData.title);
-    form.append("description", formData.description);
-    form.append("category", formData.category);
-    if (formData.attachment) form.append("attachment", formData.attachment);
+    setShowConfirmation(true);
+  };
 
-    const token = localStorage.getItem("token");
-
+  const handleConfirmSubmit = async () => {
+    setShowConfirmation(false);
     setLoading(true);
 
     try {
+      const token = localStorage.getItem("token");
+      const formDataObj = new FormData();
+
+      formDataObj.append("title", formData.title);
+      formDataObj.append("description", formData.description);
+      formDataObj.append("category", formData.category);
+      if (formData.attachment) {
+        formDataObj.append("attachment", formData.attachment);
+      }
+
       const res = await fetch("http://localhost:5100/api/announcements/create", {
         method: "POST",
-        body: form,
         headers: { Authorization: `Bearer ${token}` },
+        body: formDataObj,
       });
 
-      const data = await res.json();
-
-      if (res.ok) {
-        showToast("Announcement submitted successfully!");
-        setTimeout(() => {
-          navigate("/admin/announcementpage");
-        }, 1500);
-      } else {
-        showToast(data.message || "Error submitting announcement", "error");
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Failed to submit announcement");
       }
-    } catch (err) {
-      console.error("Error:", err);
-      showToast("Server error occurred.", "error");
-    }
 
-    setLoading(false);
+      setShowSuccess(true);
+      setFormData({
+        title: "",
+        description: "",
+        category: CATEGORIES[0],
+        attachment: null,
+      });
+    } catch (err) {
+      showError(err.message || "Failed to submit announcement");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSuccessClose = () => {
+    setShowSuccess(false);
+    navigate("/admin/announcementpage");
   };
 
   return (
     <div className="flex-1 bg-gray-100 min-h-screen overflow-y-auto p-10">
       
-      {/* Toast Notification */}
       {toast.show && (
         <div
           className={`fixed top-6 right-6 px-5 py-3 rounded-xl shadow-lg text-white text-sm font-medium animate-fade-in 
@@ -88,6 +106,25 @@ export default function AdminAnnouncementSubmissionForm() {
           {toast.message}
         </div>
       )}
+
+      <ConfirmationModal
+        isOpen={showConfirmation}
+        title="Confirm Announcement Submission"
+        message="Are you sure you want to submit this announcement?"
+        confirmText="Submit"
+        onConfirm={handleConfirmSubmit}
+        onCancel={() => setShowConfirmation(false)}
+        isLoading={loading}
+      />
+
+      <SuccessModal
+        isOpen={showSuccess}
+        title="Announcement Submitted Successfully"
+        message="Your announcement has been created and is now live."
+        actionText="OK"
+        autoCloseMs={1500}
+        onClose={handleSuccessClose}
+      />
 
       <div className="max-w-6xl mx-auto">
 

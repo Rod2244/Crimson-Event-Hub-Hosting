@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { Calendar } from "lucide-react";
 import axios from "axios";
+import { useError } from "../../context/ErrorContext";
 
 export default function RegisteredTab() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const { showError } = useError();
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -19,8 +21,9 @@ export default function RegisteredTab() {
 
         setEvents(res.data);
       } catch (err) {
-        console.error(err);
-        setError(err.response?.data?.message || "Failed to fetch registered events.");
+        const message = err.response?.data?.message || "Failed to fetch registered events.";
+        setError(message);
+        showError(message);
       } finally {
         setLoading(false);
       }

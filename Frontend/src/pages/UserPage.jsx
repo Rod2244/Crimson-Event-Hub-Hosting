@@ -6,11 +6,13 @@ import RegisteredTab from "../components/user/RegisteredTab";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useError } from "../context/ErrorContext";
 
 export default function UserPage() {
   const [activeTab, setActiveTab] = useState("info");
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
+  const { showError } = useError();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -26,7 +28,7 @@ export default function UserPage() {
         });
         setUser(res.data);
       } catch (err) {
-        console.error(err);
+        showError("Failed to load user profile");
         navigate("/login");
       }
     };

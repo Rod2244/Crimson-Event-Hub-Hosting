@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { X, Download } from "lucide-react";
+import { useError } from "../../../context/ErrorContext";
 
 const AnnouncementDetailModal = ({ announcementId, onClose }) => {
   const [announcement, setAnnouncement] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { showError } = useError();
 
   useEffect(() => {
     const fetchAnnouncement = async () => {
@@ -27,8 +29,9 @@ const AnnouncementDetailModal = ({ announcementId, onClose }) => {
         const data = await res.json();
         setAnnouncement(data);
       } catch (err) {
-        console.error(err);
-        setError(err.message);
+        const message = err.message || "Failed to load announcement";
+        setError(message);
+        showError(message);
       } finally {
         setLoading(false);
       }

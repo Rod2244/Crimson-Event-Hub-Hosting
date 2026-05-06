@@ -2,9 +2,11 @@ import UpcomingEvent from "./UpcomingEvent";
 import CalendarCard from "../admin/AdminCalendar";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useError } from "../../context/ErrorContext";
 
 export default function Dashboard({ className = "" }) {
   const navigate = useNavigate();
+  const { showError } = useError();
 
   const [upcoming, setUpcoming] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -47,7 +49,7 @@ export default function Dashboard({ className = "" }) {
         setLoading(false);
       })
       .catch((err) => {
-        console.error("Error fetching events:", err);
+        showError("Failed to load upcoming events");
         setLoading(false);
       });
   }, []);

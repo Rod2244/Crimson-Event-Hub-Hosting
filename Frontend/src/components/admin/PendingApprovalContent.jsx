@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { Search, Eye, Download } from "lucide-react";
 import { fetchWithAuth } from "../../utils/fetchWithAuth.js"; // helper to include token in headers
+import { useError } from "../../context/ErrorContext";
+import ConfirmationModal from "../common/ConfirmationModal";
+import SuccessModal from "../common/SuccessModal";
 
 // ----- Helper: Format date/time -----
 const formatDateTime = (date, time = null) => {
@@ -49,19 +52,17 @@ const StatusTag = ({ status }) => {
 };
 
 // ----- View Modal -----
-function ViewModal({ item, onClose, onApprove, onReject }) {
+function ViewModal({ item, onClose, onApprove, onReject, isLoading }) {
   const [remarks, setRemarks] = useState("");
 
   if (!item) return null;
 
   const handleApprove = () => {
     onApprove({ ...item, remarks });
-    onClose();
   };
 
   const handleReject = () => {
     onReject({ ...item, remarks });
-    onClose();
   };
 
   return (
@@ -167,16 +168,24 @@ function ViewModal({ item, onClose, onApprove, onReject }) {
           {/* Actions */}
           <div className="mt-4 flex justify-end space-x-2">
             <button
-              onClick={handleReject}
-              className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition"
+              onClick={onClose}
+              className="px-6 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg font-semibold transition"
             >
-              Reject
+              Close
+            </button>
+            <button
+              onClick={handleReject}
+              disabled={isLoading}
+              className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {isLoading ? "Processing..." : "Reject"}
             </button>
             <button
               onClick={handleApprove}
-              className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition"
+              disabled={isLoading}
+              className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              Approve
+              {isLoading ? "Processing..." : "Approve"}
             </button>
           </div>
         </div>
@@ -223,6 +232,10 @@ const PendingApprovalsContent = () => {
   const [typeFilter, setTypeFilter] = useState("All Types");
   const [viewItem, setViewItem] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null);
+  const { showError } = useError();
 
   // Fetch pending items on mount
   useEffect(() => {
@@ -235,7 +248,7 @@ const PendingApprovalsContent = () => {
         const data = await res.json();
         setItems(data.items);
       } catch (err) {
-        console.error(err);
+        showError("Failed to load pending items");
       } finally {
         setLoading(false);
       }
@@ -272,13 +285,31 @@ const PendingApprovalsContent = () => {
             : i;
         })
       );
+
+      setShowSuccess(true);
+      setViewItem(null);
     } catch (err) {
-      console.error(err);
+      showError("Failed to update item status");
     }
   };
 
-  const handleApprove = (item) => updateStatus(item, "Approved");
-  const handleReject = (item) => updateStatus(item, "Rejected");
+  const handleApprove = (item) => {
+    setPendingAction({ item, action: "Approved" });
+    setShowConfirmation(true);
+  };
+
+  const handleReject = (item) => {
+    setPendingAction({ item, action: "Rejected" });
+    setShowConfirmation(true);
+  };
+
+  const handleConfirmAction = () => {
+    if (pendingAction) {
+      setShowConfirmation(false);
+      updateStatus(pendingAction.item, pendingAction.action);
+      setPendingAction(null);
+    }
+  };
 
   return (
     <div className="flex-1 p-8 overflow-y-auto">
@@ -347,8 +378,33 @@ const PendingApprovalsContent = () => {
           onClose={() => setViewItem(null)}
           onApprove={handleApprove}
           onReject={handleReject}
+          isLoading={loading}
         />
       )}
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showConfirmation}
+        title={pendingAction?.action === "Approved" ? "Approve Item" : "Reject Item"}
+        message={`Are you sure you want to ${pendingAction?.action?.toLowerCase()} this ${pendingAction?.item?.type?.toLowerCase()}?`}
+        confirmText={pendingAction?.action}
+        isDangerous={pendingAction?.action === "Rejected"}
+        onConfirm={handleConfirmAction}
+        onCancel={() => {
+          setShowConfirmation(false);
+          setPendingAction(null);
+        }}
+      />
+
+      {/* Success Modal */}
+      <SuccessModal
+        isOpen={showSuccess}
+        title="Success"
+        message={pendingAction?.action === "Approved" ? `${pendingAction?.item?.type} has been approved successfully.` : `${pendingAction?.item?.type} has been rejected successfully.`}
+        actionText="OK"
+        autoCloseMs={2000}
+        onClose={() => setShowSuccess(false)}
+      />
     </div>
   );
 };

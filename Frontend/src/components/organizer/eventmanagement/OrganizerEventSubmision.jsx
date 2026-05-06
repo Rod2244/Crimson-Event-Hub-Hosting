@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { Send, UploadCloud, ArrowLeft, X, CheckCircle, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useError } from "../../../context/ErrorContext";
+import ConfirmationModal from "../../common/ConfirmationModal";
+import SuccessModal from "../../common/SuccessModal";
 
 // Feedback component
 const FeedbackMessage = ({ message, type, onClose }) => {
@@ -30,6 +33,7 @@ const FeedbackMessage = ({ message, type, onClose }) => {
 
 export default function OrganizerEventSubmissionForm() {
     const navigate = useNavigate();
+    const { showError } = useError();
 
     const [formData, setFormData] = useState({
         title: "",
@@ -52,6 +56,8 @@ export default function OrganizerEventSubmissionForm() {
     const [feedbackMessage, setFeedbackMessage] = useState(null);
     const [feedbackType, setFeedbackType] = useState("error");
     const [isLoading, setIsLoading] = useState(false);
+    const [showConfirmation, setShowConfirmation] = useState(false);
+    const [showSuccess, setShowSuccess] = useState(false);
 
     const [attachmentFile, setAttachmentFile] = useState(null);
     const [eventImageFile, setEventImageFile] = useState(null);
@@ -71,10 +77,10 @@ export default function OrganizerEventSubmissionForm() {
                     console.log("✅ Categories fetched successfully:", data);
                     setCategories(data);
                 } else {
-                    console.error("❌ Failed to fetch categories. Status:", res.status);
+                    showError("Failed to load categories");
                 }
             } catch (err) {
-                console.error("❌ Error fetching categories:", err);
+                showError("Failed to load categories");
             }
         };
 
@@ -102,19 +108,23 @@ export default function OrganizerEventSubmissionForm() {
 
     const handleSubmit = async () => {
         setFeedbackMessage(null);
-        setIsLoading(true);
 
         // Validate required fields
         const requiredFields = ["title", "description", "category_id", "organizer", "startDate", "endDate", "startTime", "endTime", "location", "targetAudience"];
         for (let field of requiredFields) {
             if (!formData[field]?.toString().trim()) {
-                setFeedbackType("error");
-                const fieldName = field === "category_id" ? "Category" : field.replace(/([A-Z])/g, " $1");
-                setFeedbackMessage(`Please fill in the required field: ${fieldName}`);
-                setIsLoading(false);
+                showError(`Please fill in the required field: ${field.replace(/([A-Z])/g, " $1")}`);
                 return;
             }
         }
+
+        // Show confirmation modal
+        setShowConfirmation(true);
+    };
+
+    const handleConfirmSubmit = async () => {
+        setShowConfirmation(false);
+        setIsLoading(true);
 
         try {
             const data = new FormData();
@@ -135,8 +145,7 @@ export default function OrganizerEventSubmissionForm() {
             const result = await res.json();
 
             if (res.ok) {
-                setFeedbackType("success");
-                setFeedbackMessage(`Event submitted successfully! Approval status: ${result.approval_status || 'pending'}. Redirecting...`);
+                setShowSuccess(true);
                 // reset form
                 setFormData({
                     title: "", description: "", category_id: "", organizer: "",
@@ -145,20 +154,22 @@ export default function OrganizerEventSubmissionForm() {
                 });
                 setAttachmentFile(null);
                 setEventImageFile(null);
-
-                setTimeout(() => navigate("/organizer/eventmanagement"), 3000);
             } else {
                 setFeedbackType("error");
                 setFeedbackMessage(result.message || "An error occurred.");
             }
         } catch (err) {
-            console.error(err);
+            showError("Failed to connect to the server");
             setFeedbackType("error");
             setFeedbackMessage("Failed to connect to the server.");
         } finally {
             setIsLoading(false);
         }
+    };
 
+    const handleSuccessClose = () => {
+        setShowSuccess(false);
+        navigate("/organizer/eventmanagement");
     };
 
     return (
@@ -174,6 +185,25 @@ export default function OrganizerEventSubmissionForm() {
             </style>
 
             <FeedbackMessage message={feedbackMessage} type={feedbackType} onClose={handleCloseFeedback} />
+
+            <ConfirmationModal
+                isOpen={showConfirmation}
+                title="Confirm Event Submission"
+                message="Are you sure you want to submit this event? It will be sent for admin approval."
+                confirmText="Submit Event"
+                onConfirm={handleConfirmSubmit}
+                onCancel={() => setShowConfirmation(false)}
+                isLoading={isLoading}
+            />
+
+            <SuccessModal
+                isOpen={showSuccess}
+                title="Event Submitted Successfully"
+                message="Your event has been submitted for admin approval. Redirecting to event management..."
+                actionText="OK"
+                autoCloseMs={3000}
+                onClose={handleSuccessClose}
+            />
 
             <div className="flex-1 bg-gray-50 min-h-screen overflow-y-auto p-4 sm:p-10 font-sans">
                 <div className="max-w-6xl mx-auto">

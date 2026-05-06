@@ -1,9 +1,13 @@
 import React, { useState } from "react";
 import { Send, UploadCloud, ArrowLeft, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useError } from "../../../context/ErrorContext";
+import ConfirmationModal from "../../common/ConfirmationModal";
+import SuccessModal from "../../common/SuccessModal";
 
 export default function OrganizerAnnouncementSubmissionForm() {
     const navigate = useNavigate();
+    const { showError } = useError();
 
     const [formData, setFormData] = useState({
         title: "",
@@ -14,7 +18,9 @@ export default function OrganizerAnnouncementSubmissionForm() {
     });
 
     const [loading, setLoading] = useState(false); 
-    const [redirecting, setRedirecting] = useState(false); // 🔥 NEW: modern loading screen
+    const [redirecting, setRedirecting] = useState(false);
+    const [showConfirmation, setShowConfirmation] = useState(false);
+    const [showSuccess, setShowSuccess] = useState(false);
 
     const handleChange = (field, value) => {
         setFormData({ ...formData, [field]: value });
@@ -28,20 +34,27 @@ export default function OrganizerAnnouncementSubmissionForm() {
         const required = ["title", "description", "category", "author"];
         for (let field of required) {
             if (!formData[field] || formData[field].trim() === "") {
-                alert(`Please fill in: ${field}`);
+                showError(`Please fill in: ${field}`);
                 return;
             }
         }
 
         const token = localStorage.getItem("token");
         if (!token) {
-            alert("Unauthorized! Please log in.");
+            showError("Unauthorized! Please log in.");
             return;
         }
 
+        // Show confirmation modal
+        setShowConfirmation(true);
+    };
+
+    const handleConfirmSubmit = async () => {
+        setShowConfirmation(false);
         setLoading(true);
 
         try {
+            const token = localStorage.getItem("token");
             const data = new FormData();
             data.append("title", formData.title);
             data.append("description", formData.description);
@@ -63,19 +76,28 @@ export default function OrganizerAnnouncementSubmissionForm() {
                 throw new Error(err.message || "Submission failed");
             }
 
-            // ✔ SUCCESS — Show modern loading before redirect
-            setRedirecting(true);
+            // ✔ SUCCESS — Show modal
+            setShowSuccess(true);
 
-            // Delay redirect for cinematic effect
-            setTimeout(() => {
-                navigate("/organizer/announcementmanagement");
-            }, 1500);
+            // Reset form
+            setFormData({
+                title: "",
+                description: "",
+                category: "",
+                author: "",
+                attachment: null,
+            });
 
         } catch (error) {
-            alert("Error: " + error.message);
+            showError(error.message || "Failed to submit announcement");
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleSuccessClose = () => {
+        setShowSuccess(false);
+        navigate("/organizer/announcementmanagement");
     };
 
     return (
@@ -90,6 +112,25 @@ export default function OrganizerAnnouncementSubmissionForm() {
                     </p>
                 </div>
             )}
+
+            <ConfirmationModal
+                isOpen={showConfirmation}
+                title="Confirm Announcement Submission"
+                message="Are you sure you want to submit this announcement?"
+                confirmText="Submit"
+                onConfirm={handleConfirmSubmit}
+                onCancel={() => setShowConfirmation(false)}
+                isLoading={loading}
+            />
+
+            <SuccessModal
+                isOpen={showSuccess}
+                title="Announcement Submitted Successfully"
+                message="Your announcement has been created and is now live."
+                actionText="OK"
+                autoCloseMs={2000}
+                onClose={handleSuccessClose}
+            />
 
             {/* MAIN PAGE */}
             <div className="flex-1 bg-gray-100 min-h-screen overflow-y-auto p-10">

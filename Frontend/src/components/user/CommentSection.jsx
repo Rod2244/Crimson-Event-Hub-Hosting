@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useError } from "../../context/ErrorContext";
 
 export default function CommentSection({ eventId, user }) {
   const [comments, setComments] = useState([]);
@@ -6,6 +7,7 @@ export default function CommentSection({ eventId, user }) {
   const [replyTo, setReplyTo] = useState(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const token = localStorage.getItem("token");
+  const { showError } = useError();
 
   // Fetch comments
   useEffect(() => {
@@ -23,7 +25,7 @@ export default function CommentSection({ eventId, user }) {
       const data = await res.json();
       setComments(data);
     } catch (err) {
-      console.error("Failed to fetch comments", err);
+      showError("Failed to load comments");
     }
   };
 
@@ -48,6 +50,7 @@ export default function CommentSection({ eventId, user }) {
       setReplyTo(null);
       fetchComments();
     } catch (err) {
+      showError("Failed to post comment");
       console.error("Failed to post comment", err);
     }
   };

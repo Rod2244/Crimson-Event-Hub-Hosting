@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { X, Camera } from "lucide-react";
 import axios from "axios";
+import { useError } from "../../context/ErrorContext";
 
 export default function EditAdminModal({ isOpen, onClose, user, setUser }) {
+  const { showError } = useError();
   const [formData, setFormData] = useState({
     firstname: "",
     lastname: "",
@@ -85,10 +87,10 @@ export default function EditAdminModal({ isOpen, onClose, user, setUser }) {
 
         setUser(userRes.data);
         onClose();
-        alert("Profile updated successfully!");
+        showError("Profile updated successfully!", 3000);
     } catch (err) {
-        console.error("❌ Failed to update profile:", err);
-        alert(err.response?.data?.message || "Something went wrong while updating.");
+        const message = err.response?.data?.message || "Failed to update profile.";
+        showError(message);
     }
     };
 

@@ -3,6 +3,9 @@ import { Search, Eye, Edit, Trash2, X } from "lucide-react";
 import { fetchUsers, deleteUser, updateUser } from "../../api/userApi";
 import DeleteUserModal from "./DeleteUserModal";
 import { motion, AnimatePresence } from "framer-motion";
+import { useError } from "../../context/ErrorContext";
+import ConfirmationModal from "../common/ConfirmationModal";
+import SuccessModal from "../common/SuccessModal";
 
 // --- Role mappings ---
 const ROLE_MAP = { 1: "Student", 2: "Organizer", 3: "Admin" };
@@ -321,6 +324,7 @@ const UserRow = ({ user, isHighlighted, onViewClick, onEditClick, onDeleteClick 
 
 // 🟫 Main content
 export default function UserManagementContent() {
+  const { showError } = useError();
   const [users, setUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("All");
@@ -328,6 +332,11 @@ export default function UserManagementContent() {
   const [editUser, setEditUser] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [pendingUser, setPendingUser] = useState(null);
+  const [pendingChanges, setPendingChanges] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Load users
   useEffect(() => {
@@ -345,28 +354,60 @@ export default function UserManagementContent() {
     setSelectedUser(null);
   };
 
-  // Approve organizer
-  const approveOrganizer = async (user) => {
+  // Approve organizer - show confirmation first
+  const approveOrganizer = (user) => {
+    setPendingUser(user);
+    setShowConfirmation(true);
+  };
+
+  // Confirm organizer approval
+  const handleConfirmApproval = async () => {
+    setShowConfirmation(false);
+    if (!pendingUser) return;
+
     try {
       const res = await fetch("http://localhost:5100/api/admin/approve-organizer", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: user.user_id }),
+        body: JSON.stringify({ user_id: pendingUser.user_id }),
       });
 
       const data = await res.json();
       if (res.ok) {
-        alert(data.msg);
         setUsers((prev) =>
           prev.map((u) =>
-            u.user_id === user.user_id ? { ...u, status: "Active", role_id: 2 } : u
+            u.user_id === pendingUser.user_id ? { ...u, status: "Active", role_id: 2 } : u
           )
         );
+        setShowSuccess(true);
         setViewUser(null);
-      } else alert(data.msg || "Failed to approve user");
+      } else showError(data.msg || "Failed to approve user");
     } catch (err) {
-      console.error("Approval error:", err);
-      alert("Error approving user");
+      showError("Error approving user");
+    } finally {
+      setPendingUser(null);
+    }
+  };
+
+  // Confirm user changes
+  const handleConfirmChanges = async () => {
+    setShowConfirmation(false);
+    if (!pendingChanges) return;
+
+    setIsSaving(true);
+    try {
+      await updateUser(pendingChanges.user_id, pendingChanges);
+      setUsers((prev) =>
+        prev.map((u) => (u.user_id === pendingChanges.user_id ? { ...u, ...pendingChanges } : u))
+      );
+      setShowSuccess(true);
+      setEditUser(null);
+      setPendingChanges(null);
+    } catch (err) {
+      showError("Error updating user");
+      setPendingChanges(null);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -472,21 +513,39 @@ export default function UserManagementContent() {
 
       {/* Modals */}
       {viewUser && <ViewUserModal user={viewUser} onClose={() => setViewUser(null)} onApprove={approveOrganizer} />}
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showConfirmation}
+        title="Approve Organizer"
+        message={`Are you sure you want to approve ${pendingUser?.firstname} ${pendingUser?.lastname} as an organizer?`}
+        confirmText="Approve"
+        isDangerous={false}
+        onConfirm={handleConfirmApproval}
+        onCancel={() => {
+          setShowConfirmation(false);
+          setPendingUser(null);
+        }}
+      />
+
+      {/* Success Modal */}
+      <SuccessModal
+        isOpen={showSuccess}
+        title="Organizer Approved"
+        message={`${pendingUser?.firstname} ${pendingUser?.lastname} has been approved as an organizer.`}
+        actionText="OK"
+        autoCloseMs={2000}
+        onClose={() => setShowSuccess(false)}
+      />
+
       {editUser && (
         <EditUserModal
           user={editUser}
           onClose={() => setEditUser(null)}
-          onSave={async (updatedUser) => {
-            try {
-              await updateUser(updatedUser.user_id, updatedUser);
-              setUsers((prev) =>
-                prev.map((u) => (u.user_id === updatedUser.user_id ? { ...u, ...updatedUser } : u))
-              );
-              setEditUser(null);
-            } catch (err) {
-              console.error(err);
-              alert("Error updating user");
-            }
+          onSave={(updatedUser) => {
+            // Show confirmation modal instead of saving directly
+            setPendingChanges(updatedUser);
+            setShowConfirmation(true);
           }}
         />
       )}
@@ -497,6 +556,30 @@ export default function UserManagementContent() {
           onCancel={() => setSelectedUser(null)}
         />
       )}
+
+      {/* Edit User Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showConfirmation && !!pendingChanges}
+        title="Save Changes"
+        message={`Are you sure you want to update ${pendingChanges?.firstname || ""} ${pendingChanges?.lastname || ""}'s information?`}
+        confirmText="Save"
+        onConfirm={handleConfirmChanges}
+        onCancel={() => {
+          setShowConfirmation(false);
+          setPendingChanges(null);
+        }}
+        isLoading={isSaving}
+      />
+
+      {/* Edit User Success Modal */}
+      <SuccessModal
+        isOpen={showSuccess && !pendingUser}
+        title="User Updated"
+        message="User information has been updated successfully."
+        actionText="OK"
+        autoCloseMs={2000}
+        onClose={() => setShowSuccess(false)}
+      />
     </div>
   );
 }

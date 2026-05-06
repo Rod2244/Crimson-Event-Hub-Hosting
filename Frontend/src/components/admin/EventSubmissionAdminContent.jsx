@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { Send, UploadCloud, ArrowLeft, X, CheckCircle, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useError } from "../../context/ErrorContext";
+import ConfirmationModal from "../common/ConfirmationModal";
+import SuccessModal from "../common/SuccessModal";
 
 // Feedback component
 const FeedbackMessage = ({ message, type, onClose }) => {
@@ -175,13 +178,17 @@ export default function AdminEventSubmissionForm() {
                 setIsLoading(false);
             }
         } catch (err) {
-            console.error(err);
+            showError("Failed to connect to server");
             setFeedbackType("error");
             setFeedbackMessage("Failed to connect to server");
             setIsLoading(false);
         }
     };
 
+    const handleSuccessClose = () => {
+        setShowSuccess(false);
+        navigate("/admin/eventpage");
+    };
 
     return (
         <>

@@ -7,15 +7,20 @@ import EventDetailsSection from "../components/user/EventdetailSection";
 import AttachmentFile from "../components/organizer/AttachmentFile";
 import OrganizerSection from "../components/organizer/OrganizerSection";
 import CommentSection from "../components/user/CommentSection";
+import ConfirmationModal from "../components/common/ConfirmationModal";
+import SuccessModal from "../components/common/SuccessModal";
+import { useError } from "../context/ErrorContext";
 import axios from "axios";
 
 export default function EventDetails() {
   const { id } = useParams();
+  const { showError } = useError();
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [joined, setJoined] = useState(false);
   const [joining, setJoining] = useState(false);
-  const [message, setMessage] = useState("");
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   // Fetch event details
   useEffect(() => {
@@ -35,16 +40,21 @@ export default function EventDetails() {
         setLoading(false);
       })
       .catch((err) => {
-        console.error("Error fetching event:", err);
+        showError("Failed to load event");
         setLoading(false);
       });
   }, [id]);
 
-  // Join event handler
-  const handleJoin = async () => {
+  // Show confirmation before joining
+  const handleJoinClick = () => {
+    setShowConfirmation(true);
+  };
+
+  // Confirm and join event
+  const handleConfirmJoin = async () => {
     if (!event) return;
+    setShowConfirmation(false);
     setJoining(true);
-    setMessage("");
 
     try {
       const token = localStorage.getItem("token");
@@ -54,13 +64,13 @@ export default function EventDetails() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      setMessage(res.data.message || "Joined successfully!");
+      setShowSuccess(true);
       setJoined(true);
     } catch (error) {
       if (error.response) {
-        setMessage(error.response.data.message);
+        showError(error.response.data.message || "Failed to join event");
       } else {
-        setMessage("Failed to join the event.");
+        showError("Failed to join the event.");
       }
     } finally {
       setJoining(false);
@@ -164,7 +174,7 @@ export default function EventDetails() {
             {/* Join Now */}
             <div className="flex flex-wrap gap-3">
               <button
-                onClick={handleJoin}
+                onClick={handleJoinClick}
                 disabled={joined || joining || !event?.allow_joining}
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition
                   ${
@@ -185,14 +195,33 @@ export default function EventDetails() {
                   : "Join Now"}
               </button>
             </div>
-
-            {message && <p className="mt-3 text-sm text-gray-800">{message}</p>}
             
             {!event?.allow_joining && (
               <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <p className="text-sm text-yellow-800"><strong>Note:</strong> Registration for this event is currently closed. Please try again later.</p>
               </div>
             )}
+
+            {/* Confirmation Modal */}
+            <ConfirmationModal
+              isOpen={showConfirmation}
+              title="Join Event"
+              message={`Are you sure you want to join "${event?.title}"?`}
+              confirmText="Join"
+              onConfirm={handleConfirmJoin}
+              onCancel={() => setShowConfirmation(false)}
+              isLoading={joining}
+            />
+
+            {/* Success Modal */}
+            <SuccessModal
+              isOpen={showSuccess}
+              title="Successfully Joined"
+              message={`You have successfully joined "${event?.title}".`}
+              actionText="OK"
+              autoCloseMs={2000}
+              onClose={() => setShowSuccess(false)}
+            />
           </div>
 
           {/* Other Sections */}

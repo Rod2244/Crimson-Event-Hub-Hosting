@@ -1,10 +1,12 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
+import { useError } from "./ErrorContext";
 
 const UserContext = createContext();
 
 export function UserProvider({ children }) {
   const [user, setUser] = useState(null);
+  const { showError } = useError();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -16,11 +18,11 @@ export function UserProvider({ children }) {
         });
         setUser(res.data);
       } catch (err) {
-        console.error("Failed to fetch profile:", err);
+        showError("Failed to load user profile");
       }
     };
     fetchProfile();
-  }, []);
+  }, [showError]);
 
   return (
     <UserContext.Provider value={{ user, setUser }}>

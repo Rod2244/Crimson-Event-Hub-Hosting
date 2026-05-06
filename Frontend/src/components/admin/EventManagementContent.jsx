@@ -1,6 +1,7 @@
 import { Search, Plus, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import { useError } from '../../context/ErrorContext';
 
 // ----- Category & Status Tags -----
 const CategoryTag = ({ category }) => {
@@ -115,6 +116,7 @@ const EventRow = ({ event, isHighlighted, onDelete }) => {
 
 // ----- Event Management Content -----
 const EventManagementContent = () => {
+    const { showError } = useError();
     const navigate = useNavigate();
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -173,7 +175,7 @@ const EventManagementContent = () => {
 
             setEvents(events.filter(e => e.event_id !== eventId));
         } catch (err) {
-            console.error(err);
+            showError("Failed to delete event");
         } finally {
             setShowDeleteModal(false);
             setSelectedEvent(null);

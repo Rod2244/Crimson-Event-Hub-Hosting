@@ -5,11 +5,13 @@ import axios from "axios";
 import AuthCard from "../components/common/AuthCard";
 import LoginForm from "../components/common/LoginForm";
 import SignupForm from "../components/common/SignupForm";
-import LoadingSpinner from "../components/common/LoadingSpinner"; 
+import LoadingSpinner from "../components/common/LoadingSpinner";
+import { useError } from "../context/ErrorContext";
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { showError } = useError();
 
   const [isFlipped, setIsFlipped] = useState(location.pathname === "/signup");
   const [isLoading, setIsLoading] = useState(false);
@@ -43,9 +45,9 @@ export default function LoginPage() {
         setForgotMessage("");
       }, 2000);
     } catch (err) {
-      setForgotMessage(
-        err.response?.data?.msg || "Failed to send reset link. Try again."
-      );
+      const errorMsg = err.response?.data?.msg || "Failed to send reset link. Try again.";
+      setForgotMessage(errorMsg);
+      showError(errorMsg);
     } finally {
       setIsSubmittingForgot(false);
     }

@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { io } from "socket.io-client";
 import { Calendar, Megaphone, Info } from "lucide-react";
+import { useError } from "../context/ErrorContext";
 
 export default function NotificationPage() {
   const [notifications, setNotifications] = useState([]);
@@ -10,7 +11,8 @@ export default function NotificationPage() {
   const categories = ["All", "Unread", "Events", "Announcements"];
 
   const token = localStorage.getItem("token");
-  const userId = localStorage.getItem("userId"); // Ensure you store userId on login
+  const userId = localStorage.getItem("userId");
+  const { showError } = useError();
 
   // Helper to map type to icon
   const getNotificationIcon = (type) => {
@@ -47,7 +49,7 @@ export default function NotificationPage() {
 
         setNotifications(filtered);
       } catch (err) {
-        console.error("Error fetching notifications:", err);
+        showError("Failed to load notifications");
       }
     };
 

@@ -6,9 +6,11 @@ import HeaderControls from "../components/common/HeaderControls";
 import MonthView from "../components/common/MonthView";
 import UpcomingEvents from "../components/common/UpcomingEvents";
 import EventModal from "../components/common/EventModal";
+import { useError } from "../context/ErrorContext";
 
 export default function CalendarView() {
   const navigate = useNavigate();
+  const { showError } = useError();
 
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -35,7 +37,7 @@ export default function CalendarView() {
         setLoading(false);
       })
       .catch((err) => {
-        console.error("Error fetching events:", err);
+        showError("Failed to load events");
         setLoading(false);
       });
   }, []);

@@ -15,6 +15,9 @@ import EventManagementPage from "./pages/EventManagementPage";
 import AnnouncementManagementPage from "./pages/AnnouncementManagementPage";
 import UserManagementPage from "./pages/UserManagementPage";
 import { UserProvider } from "./context/UserContext";
+import { ErrorProvider } from "./context/ErrorContext";
+import ErrorBoundary from "./components/common/ErrorBoundary";
+import ErrorNotification from "./components/common/ErrorNotification";
 import EventSubmissionAdminPage from "./pages/EventSubmissionAdminPage";
 import AnnouncementSubmissionAdminPage from "./pages/AnnouncementSubmissionAdminPage";
 import ViewEventPage from "./pages/ViewEventPage";
@@ -32,10 +35,13 @@ import AdminPendingApprovals from "./pages/AdminPendingApprovals";
 import AdminSettingPage from "./pages/AdminSettingPage";
 export default function App() {
   return (
-    <UserProvider>
-      <Router>
-        <Routes>
-          <Route path="/" element={<Navigate to="/login" replace />} />
+    <ErrorProvider>
+      <ErrorBoundary>
+        <UserProvider>
+          <Router>
+            <ErrorNotification />
+            <Routes>
+              <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
@@ -244,6 +250,8 @@ export default function App() {
           <Route path="/about" element={<AboutPage />} />
         </Routes>
       </Router>
-    </UserProvider>
+        </UserProvider>
+      </ErrorBoundary>
+    </ErrorProvider>
   );
 }

@@ -4,9 +4,14 @@ import { useState, useEffect } from "react";
 import { Camera } from "lucide-react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { useError } from "../context/ErrorContext";
+import SuccessModal from "../components/common/SuccessModal";
 
 export default function EditProfilePage() {
   const navigate = useNavigate();
+  const { showError } = useError();
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [profileImage, setProfileImage] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
 
@@ -58,7 +63,7 @@ export default function EditProfilePage() {
           setPreviewImage(`http://localhost:5100${res.data.profile_image}`);
         }
       } catch (err) {
-        console.error(err);
+        showError("Failed to load profile");
       }
     };
 
@@ -81,9 +86,11 @@ export default function EditProfilePage() {
     e.preventDefault();
 
     if (formData.newPassword && formData.newPassword !== formData.confirmPassword) {
-      alert("New password and confirm password do not match!");
+      showError("New password and confirm password do not match!");
       return;
     }
+
+    setIsSaving(true);
 
     try {
       const token = localStorage.getItem("token");
@@ -102,19 +109,22 @@ export default function EditProfilePage() {
         },
       });
 
-      alert(res.data.message);
+      setShowSuccess(true);
 
-      // ✅ Navigate based on role
-      const role_id = Number(localStorage.getItem("role_id"));
-      if (role_id === 1) {
-        navigate("/user/profile");
-      } else if (role_id === 2) {
-        navigate("/organizer/profile");
-      }
+      // Navigate after success modal closes
+      setTimeout(() => {
+        const role_id = Number(localStorage.getItem("role_id"));
+        if (role_id === 1) {
+          navigate("/user/profile");
+        } else if (role_id === 2) {
+          navigate("/organizer/profile");
+        }
+      }, 2000);
 
     } catch (err) {
-      console.error(err);
-      alert(err.response?.data?.message || "Failed to update profile.");
+      showError(err.response?.data?.message || "Failed to update profile.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -191,16 +201,31 @@ export default function EditProfilePage() {
                 type="button"
                 className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2 rounded-md font-medium transition"
                 onClick={() => navigate(-1)}
+                disabled={isSaving}
               />
               <Button
-                label="Save Changes"
+                label={isSaving ? "Saving..." : "Save Changes"}
                 type="submit"
-                className="bg-red-700 hover:bg-red-800 text-white px-5 py-2 rounded-md font-medium transition"
+                className={`px-5 py-2 rounded-md font-medium transition ${
+                  isSaving
+                    ? "bg-gray-400 cursor-not-allowed text-gray-600"
+                    : "bg-red-700 hover:bg-red-800 text-white"
+                }`}
+                disabled={isSaving}
               />
             </div>
           </form>
         </div>
       </main>
+
+      <SuccessModal
+        isOpen={showSuccess}
+        title="Profile Updated"
+        message="Your profile has been updated successfully. Redirecting..."
+        actionText="OK"
+        autoCloseMs={2000}
+        onClose={() => setShowSuccess(false)}
+      />
     </div>
   );
 }

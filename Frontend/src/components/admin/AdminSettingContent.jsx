@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Trash2, Plus, Edit2, X } from "lucide-react";
+import { useError } from "../../context/ErrorContext";
+import ConfirmationModal from "../common/ConfirmationModal";
+import SuccessModal from "../common/SuccessModal";
 
 const SettingContent = () => {
+  const { showError } = useError();
   const [activeTab, setActiveTab] = useState("archive");
   
   // Archive states
@@ -24,6 +28,10 @@ const SettingContent = () => {
   // Archive Modal state
   const [showArchiveModal, setShowArchiveModal] = useState(false);
   const [selectedArchiveItem, setSelectedArchiveItem] = useState(null);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [confirmationAction, setConfirmationAction] = useState(null);
 
   // ================== ARCHIVE FUNCTIONS ==================
   const fetchArchived = async () => {
@@ -75,10 +83,10 @@ const SettingContent = () => {
         setShowArchiveModal(false);
         setSelectedArchiveItem(null);
       } else {
-        alert(data.message || "Failed to delete item");
+        showError(data.message || "Failed to delete item");
       }
     } catch (err) {
-      alert(err.message);
+      showError(err.message || "Failed to delete item");
     }
   };
 
@@ -121,9 +129,16 @@ const SettingContent = () => {
     e.preventDefault();
     
     if (!categoryForm.name.trim()) {
-      alert("Category name is required");
+      showError("Category name is required");
       return;
     }
+
+    setConfirmationAction({ type: "save", isEdit: !!editingCategory });
+    setShowConfirmation(true);
+  };
+
+  const handleConfirmAddCategory = async () => {
+    setShowConfirmation(false);
 
     try {
       const token = localStorage.getItem("token");
@@ -147,18 +162,26 @@ const SettingContent = () => {
 
       const data = await res.json();
       if (data.success) {
+        setSuccessMessage(editingCategory ? "Category updated successfully" : "Category created successfully");
+        setShowSuccess(true);
         fetchCategories();
         resetCategoryForm();
       } else {
-        alert(data.message || "Failed to save category");
+        showError(data.message || "Failed to save category");
       }
     } catch (err) {
-      alert(err.message);
+      showError(err.message || "Failed to save category");
     }
   };
 
   const handleDeleteCategory = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this category?")) return;
+    setConfirmationAction({ type: "delete", id });
+    setShowConfirmation(true);
+  };
+
+  const handleConfirmDeleteCategory = async () => {
+    setShowConfirmation(false);
+    const id = confirmationAction.id;
 
     try {
       const token = localStorage.getItem("token");
@@ -169,12 +192,14 @@ const SettingContent = () => {
 
       const data = await res.json();
       if (data.success) {
+        setSuccessMessage("Category deleted successfully");
+        setShowSuccess(true);
         fetchCategories();
       } else {
-        alert(data.message || "Failed to delete category");
+        showError(data.message || "Failed to delete category");
       }
     } catch (err) {
-      alert(err.message);
+      showError(err.message || "Failed to delete category");
     }
   };
 
@@ -386,7 +411,7 @@ const SettingContent = () => {
 
       {/* ================== ARCHIVE DELETE MODAL ================== */}
       {showArchiveModal && selectedArchiveItem && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm z-50">
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 bg-opacity-40 backdrop-blur-sm z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-80">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">
               Confirm Deletion

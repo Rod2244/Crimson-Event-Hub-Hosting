@@ -51,7 +51,7 @@ export const fetchUsers = async () => {
 
     return [];
   } catch (error) {
-    console.error("Error fetching users:", error);
+    // Silently fail and return empty array to prevent app crash
     return [];
   }
 };
@@ -62,7 +62,7 @@ export const deleteUser = async (id) => {
     const res = await api.delete(`/${id}`);
     return res.data.success === true;
   } catch (err) {
-    console.error("Error deleting user:", err);
+    // Return false on error without console logging
     return false;
   }
 };

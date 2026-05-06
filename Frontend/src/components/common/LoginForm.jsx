@@ -4,12 +4,14 @@ import Button from "./Button";
 import { FcGoogle } from "react-icons/fc";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useError } from "../../context/ErrorContext";
 
 export default function LoginForm({ onFlip, setIsLoading, onLoginSuccess, onForgotPasswordClick }) {
   const [form, setForm] = useState({ email: "", password: "" });
   const [message, setMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const { showError } = useError();
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -42,9 +44,7 @@ export default function LoginForm({ onFlip, setIsLoading, onLoginSuccess, onForg
         navigate("/homepage");
       }
     } catch (err) {
-      console.error("Google Login Error:", err.response?.data?.message || err);
-      // Display the specific error message from the backend (401, 409, 500)
-      setMessage(err.response?.data?.message || "Google login failed.");
+      showError(err.response?.data?.message || "Google login failed");
     }
   };
 

@@ -8,11 +8,13 @@ import RecentSubmissions from '../components/admin/RecentSubmissions';
 import QuickAction from '../components/common/QuickAction';
 import DashboardCalendar from "../components/admin/AdminCalendar";
 import { useUser } from '../context/UserContext';
+import { useError } from '../context/ErrorContext';
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
   const { user } = useUser();
+  const { showError } = useError();
   const navigate = useNavigate();
 
   const [allPendingCount, setAllPendingCount] = useState(0);
@@ -34,7 +36,7 @@ const Dashboard = () => {
         });
         setActiveUsers(res.data.activeUsers || 0);
       } catch (err) {
-        console.error("Error fetching active users:", err);
+        showError("Failed to load active users");
       } finally {
         setLoadingUsers(false);
       }
@@ -91,7 +93,7 @@ const Dashboard = () => {
 
         setPendingItems(recentPending);
       } catch (err) {
-        console.error("Error fetching pending approvals:", err);
+        showError("Failed to load pending approvals");
         setPendingItems([]);
       } finally {
         setLoadingPending(false);
@@ -135,7 +137,7 @@ const Dashboard = () => {
         setApprovedAnnouncements(approvedAnnouncementsList.length);
 
         } catch (err) {
-        console.error("Error fetching approved counts:", err);
+        showError("Failed to load approval counts");
         }
     };
 

@@ -1,8 +1,11 @@
-// components/organizer/settings/OrganizerSettingsContent.jsx
 import React, { useState, useEffect } from "react";
 import { Trash2, Edit2, Camera } from "lucide-react";
+import { useError } from "../../../context/ErrorContext";
+import ConfirmationModal from "../../common/ConfirmationModal";
+import SuccessModal from "../../common/SuccessModal";
 
 const OrganizerSettingsContent = () => {
+  const { showError } = useError();
   const [activeTab, setActiveTab] = useState("profile");
 
   // PROFILE STATE
@@ -30,8 +33,9 @@ const OrganizerSettingsContent = () => {
   const [archivedFilter, setArchivedFilter] = useState("all");
   const [deleting, setDeleting] = useState(false);
 
-  const [showModal, setShowModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   /* ============================================
      FETCH PROFILE
@@ -70,8 +74,9 @@ const OrganizerSettingsContent = () => {
           : null
       );
     } catch (err) {
-      console.error(err);
-      setMessage("Error loading profile");
+      const message = "Error loading profile";
+      setMessage(message);
+      showError(message);
     } finally {
       setLoadingProfile(false);
     }
@@ -96,8 +101,10 @@ const OrganizerSettingsContent = () => {
       const data = await res.json();
       setArchivedData(Array.isArray(data.items) ? data.items : []);
     } catch (err) {
-      setArchivedError(err.message);
+      const message = err.message || "Failed to load archived items";
+      setArchivedError(message);
       setArchivedData([]);
+      showError(message);
     } finally {
       setLoadingArchived(false);
     }
@@ -111,8 +118,18 @@ const OrganizerSettingsContent = () => {
      DELETE ARCHIVED ITEM
   ============================================ */
   const handleDelete = async (id, type) => {
+    // Show confirmation first
+    setSelectedItem({ id, type });
+    setShowConfirmation(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    setShowConfirmation(false);
+    setDeleting(true);
+    const { id, type } = selectedItem;
+
     try {
-      setDeleting(true);
+      setMessage("");
       const token = localStorage.getItem("token");
 
       const res = await fetch("http://localhost:5100/api/archived/user/delete", {
@@ -127,19 +144,19 @@ const OrganizerSettingsContent = () => {
       const data = await res.json();
 
       if (data.success) {
-        setMessage("Item deleted successfully");
+        setShowSuccess(true);
         setTimeout(() => {
-          window.location.reload();
-        }, 800);
+          setShowConfirmation(false);
+          setSelectedItem(null);
+          setArchivedData((prev) => prev.filter((item) => item.id !== id));
+        }, 1500);
       } else {
-        alert(data.message || "Failed to delete item");
+        showError(data.message || "Failed to delete item");
       }
     } catch (err) {
-      alert(err.message);
+      showError(err.message || "Failed to delete item");
     } finally {
       setDeleting(false);
-      setShowModal(false);
-      setSelectedItem(null);
     }
   };
 
@@ -422,7 +439,7 @@ const OrganizerSettingsContent = () => {
                           className="text-red-600 hover:text-red-800"
                           onClick={() => {
                             setSelectedItem(item);
-                            setShowModal(true);
+                            setShowConfirmation(true);
                           }}
                         >
                           <Trash2 size={18} />
@@ -438,37 +455,28 @@ const OrganizerSettingsContent = () => {
               </div>
             )}
 
-            {/* DELETE MODAL */}
-            {showModal && selectedItem && (
-              <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center">
-                <div className="bg-white p-5 rounded-lg shadow w-80">
-                  <h3 className="text-lg font-semibold mb-3">
-                    Confirm Deletion
-                  </h3>
-                  <p className="mb-4">
-                    Delete <strong>{selectedItem.title}</strong>?
-                  </p>
-                  <div className="flex justify-end gap-3">
-                    <button
-                      className="px-4 py-2 border rounded hover:bg-gray-100"
-                      onClick={() => setShowModal(false)}
-                      disabled={deleting}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 flex justify-center items-center gap-2"
-                      onClick={() =>
-                        handleDelete(selectedItem.id, selectedItem.type)
-                      }
-                      disabled={deleting}
-                    >
-                      {deleting ? "Deleting..." : "Delete"}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* CONFIRMATION AND SUCCESS MODALS */}
+            <>
+              <ConfirmationModal
+                isOpen={showConfirmation}
+                title="Delete Item"
+                message={`Are you sure you want to delete this ${selectedItem?.type?.toLowerCase()}? This action cannot be undone.`}
+                confirmText="Delete"
+                isDangerous={true}
+                isLoading={deleting}
+                onConfirm={handleConfirmDelete}
+                onCancel={() => setShowConfirmation(false)}
+              />
+
+              <SuccessModal
+                isOpen={showSuccess}
+                title="Item Deleted"
+                message="The item has been deleted successfully."
+                actionText="OK"
+                autoCloseMs={1500}
+                onClose={() => setShowSuccess(false)}
+              />
+            </>
           </div>
         )}
       </div>
