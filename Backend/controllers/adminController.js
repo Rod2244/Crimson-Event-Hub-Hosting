@@ -26,15 +26,21 @@ export const approveOrganizer = async (req, res) => {
 
     // Send approval email
     try {
-      await sendEmail(
+      const emailResult = await sendEmail(
         user.email,
         "Your Organizer Application is Approved!",
         `<h1>Hi ${user.firstname}!</h1>
          <p>Congratulations! Your application to become an Organizer has been approved.</p>
          <p>You now have full access to Organizer features.</p>`
       );
+      
+      if (emailResult.success) {
+        console.log("✅ Approval email sent to:", user.email);
+      } else {
+        console.warn("⚠️ Approval email failed:", emailResult);
+      }
     } catch (err) {
-      console.error("Failed to send approval email:", err);
+      console.error("❌ Failed to send approval email:", err);
     }
 
     return res.json({ msg: "User approved and notified successfully." });

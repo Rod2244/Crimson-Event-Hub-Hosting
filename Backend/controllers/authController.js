@@ -55,26 +55,33 @@ export const signup = async (req, res) => {
 
     // ✅ Send email notification
     try {
+      let emailResult;
       if (role_id === "2") {
         // Organizer application
-        await sendEmail(
+        emailResult = await sendEmail(
           email,
           "Organizer Application Received",
           `<h1>Hello ${firstname}!</h1>
            <p>Your application to become an Organizer has been received.</p>
            <p>Waiting for admin approval.</p>`
         );
+        console.log("📧 Organizer signup email result:", emailResult);
       } else {
         // Regular signup
-        await sendEmail(
+        emailResult = await sendEmail(
           email,
           "Welcome to Our System",
           `<h1>Welcome ${firstname}!</h1>
            <p>Your account has been successfully created and is now active.</p>`
         );
+        console.log("📧 User signup email result:", emailResult);
+      }
+      
+      if (!emailResult.success) {
+        console.warn("⚠️ Email sending failed:", emailResult);
       }
     } catch (err) {
-      console.error("Failed to send signup email:", err);
+      console.error("❌ Failed to send signup email:", err);
       // Note: We do not fail signup if email fails
     }
 
